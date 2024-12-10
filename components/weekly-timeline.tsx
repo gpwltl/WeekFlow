@@ -2,13 +2,45 @@
 
 import { Task } from '@/lib/data'
 import { format, isSameDay } from 'date-fns'
+import { useState, useEffect } from 'react'
 
 interface WeeklyTimelineProps {
-  tasks: Task[]
   weekDates: Date[]
 }
 
-export function WeeklyTimeline({ tasks, weekDates }: WeeklyTimelineProps) {
+export function WeeklyTimeline({ weekDates }: WeeklyTimelineProps) {
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        setIsLoading(true)
+        const startDate = weekDates[0].toISOString()
+        const endDate = weekDates[weekDates.length - 1].toISOString()
+        
+        const response = await fetch(
+          `/api/tasks?startDate=${startDate}&endDate=${endDate}`
+        )
+        
+        if (!response.ok) throw new Error('Failed to fetch tasks')
+        
+        const data = await response.json()
+        setTasks(data)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchTasks()
+  }, [weekDates])
+
+  if (isLoading) return <div>Loading...</div>
+  if (error) return <div>Error: {error}</div>
+
   const startDate = weekDates[0]
   const endDate = weekDates[weekDates.length - 1]
 
@@ -22,15 +54,15 @@ export function WeeklyTimeline({ tasks, weekDates }: WeeklyTimelineProps) {
   }
 
   // 주간에 해당하는 태스크만 필터링
-  const weekTasks = tasks.filter(task => {
-    const taskStart = new Date(task.startDate)
-    const taskEnd = new Date(task.endDate)
+  const weekTasks = Array.isArray(tasks) ? tasks.filter(task => {
+    const taskStart = new Date(task.start_date)
+    const taskEnd = new Date(task.end_date)
     return taskStart <= endDate && taskEnd >= startDate
-  })
+  }) : [];
 
   // 태스크를 시작일 기준으로 정렬
   const sortedTasks = weekTasks.sort((a, b) => 
-    new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+    new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
   )
 
   // 날짜별 칸의 너비 계산 (20%씩)
@@ -66,8 +98,8 @@ export function WeeklyTimeline({ tasks, weekDates }: WeeklyTimelineProps) {
         <div className="absolute top-0 left-0 w-full">
           <div className="relative min-h-[200px] space-y-2 pt-2">
             {sortedTasks.map((task, index) => {
-              const taskStart = new Date(task.startDate)
-              const taskEnd = new Date(task.endDate)
+              const taskStart = new Date(task.start_date)
+              const taskEnd = new Date(task.end_date)
               
               const startPos = getTaskPosition(taskStart)
               const endPos = getTaskPosition(taskEnd)
