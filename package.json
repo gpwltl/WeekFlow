@@ -7,8 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "db:migrate": "tsx db/migrations/0000_initial.ts",
-    "db:seed": "tsx db/seed.ts"
+    "db:migrate": "tsx shared/db/migrations/0000_initial.ts",
+    "db:seed": "tsx shared/db/seed.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.5.6",
