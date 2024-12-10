@@ -8,8 +8,8 @@ dotenv.config();
 const dbUrl = process.env.DATABASE_URL || 'file:./sqlite.db';
 
 export default {
-  schema: './db/schema.ts',
-  out: './db/migrations',
+  schema: './src/infrastructure/db/schema.ts',
+  out: './src/infrastructure/db/migrations',
   driver: 'libsql',
   dbCredentials: {
     url: dbUrl,

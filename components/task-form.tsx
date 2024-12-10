@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Task } from '@/lib/data'
+import { Task } from '@/src/task/entities/Task'
 
 interface TaskFormProps {
   onAddTask: (task: Omit<Task, 'id'>) => void
@@ -33,8 +33,8 @@ export function TaskForm({ onAddTask }: TaskFormProps) {
       onAddTask({
         title,
         content,
-        startDate,
-        endDate,
+        start_date: startDate.toISOString(),
+        end_date: endDate.toISOString(), 
         author,
         status,
         type,

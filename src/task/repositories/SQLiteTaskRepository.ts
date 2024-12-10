@@ -1,7 +1,8 @@
-import { Task } from '@/domain/entities/Task'
-import { TaskRepository } from '@/domain/repositories/TaskRepository'
-import { db, tasks } from '@/db'
+import { db, tasks } from '@/shared/db'
 import { eq, and, gte, lte } from 'drizzle-orm'
+import { TaskRepository } from '@/src/task/repositories/TaskRepository'
+import { Task } from '@/src/task/entities/Task'
+import { randomUUID } from 'crypto'
 
 export class SQLiteTaskRepository implements TaskRepository {
   async findAll(): Promise<Task[]> {
@@ -21,7 +22,8 @@ export class SQLiteTaskRepository implements TaskRepository {
   }
 
   async create(task: Omit<Task, 'id'>): Promise<Task> {
-    const [newTask] = await db.insert(tasks).values(task).returning()
+    const newTask = { ...task, id: randomUUID() }
+    await db.insert(tasks).values(newTask)
     return newTask
   }
 

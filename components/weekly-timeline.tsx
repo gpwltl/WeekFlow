@@ -1,19 +1,26 @@
 "use client"
 
-import { Task } from '@/lib/data'
+import { Task } from '@/src/task/entities/Task'
 import { format, isSameDay } from 'date-fns'
 import { useState, useEffect } from 'react'
 
 interface WeeklyTimelineProps {
+  tasks: Task[]
   weekDates: Date[]
+  onTasksUpdate?: (tasks: Task[]) => void
 }
 
-export function WeeklyTimeline({ weekDates }: WeeklyTimelineProps) {
-  const [tasks, setTasks] = useState<Task[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+export const WeeklyTimeline: React.FC<WeeklyTimelineProps> = ({ 
+  tasks, 
+  weekDates,
+  onTasksUpdate 
+}) => {
+  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    let isSubscribed = true
+
     const fetchTasks = async () => {
       try {
         setIsLoading(true)
@@ -21,21 +28,32 @@ export function WeeklyTimeline({ weekDates }: WeeklyTimelineProps) {
         const endDate = weekDates[weekDates.length - 1].toISOString()
         
         const response = await fetch(
-          `/api/tasks?startDate=${startDate}&endDate=${endDate}`
+          `/api/tasks?startDate=${startDate}&endDate=${endDate}`,
+          { cache: 'no-store' }
         )
         
         if (!response.ok) throw new Error('Failed to fetch tasks')
         
         const data = await response.json()
-        setTasks(data)
+        if (isSubscribed) {
+          onTasksUpdate?.(data)
+        }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred')
+        if (isSubscribed) {
+          setError(err instanceof Error ? err.message : 'An error occurred')
+        }
       } finally {
-        setIsLoading(false)
+        if (isSubscribed) {
+          setIsLoading(false)
+        }
       }
     }
 
     fetchTasks()
+
+    return () => {
+      isSubscribed = false
+    }
   }, [weekDates])
 
   if (isLoading) return <div>Loading...</div>

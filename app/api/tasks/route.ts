@@ -1,6 +1,6 @@
+import { SQLiteTaskRepository } from '@/src/task/repositories/SQLiteTaskRepository';
+import { TaskUseCases } from '@/src/task/usecases/TaskUseCases';
 import { NextResponse } from 'next/server';
-import { SQLiteTaskRepository } from '@/infrastructure/repositories/SQLiteTaskRepository';
-import { TaskUseCases } from '@/domain/usecases/TaskUseCases';
 
 const taskRepository = new SQLiteTaskRepository();
 const taskUseCases = new TaskUseCases(taskRepository);

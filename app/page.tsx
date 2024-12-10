@@ -1,22 +1,26 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { WeeklyTimeline } from '@/components/weekly-timeline'
 import { TaskForm } from '@/components/task-form'
-import { testData, Task } from '@/lib/data'
 import { DatePicker } from '@/components/ui/date-picker'
-import { getWeekDates, formatDateRange } from '@/lib/utils'
+import { getWeekDates, formatDateRange } from '@/shared/lib/utils'
 import { v4 as uuidv4 } from 'uuid'
+import { Task } from '@/src/task/entities/Task'
 
 export default function WeeklyTimelinePage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
-  const [tasks, setTasks] = useState<Task[]>(testData)
-  const weekDates = getWeekDates(selectedDate)
+  const [tasks, setTasks] = useState<Task[]>([])
+  const weekDates = useMemo(() => getWeekDates(selectedDate), [selectedDate])
 
   const handleAddTask = (newTask: Omit<Task, 'id'>) => {
     const taskWithId = { ...newTask, id: uuidv4() }
     setTasks(prevTasks => [...prevTasks, taskWithId])
   }
+
+  const handleTasksUpdate = useCallback((updatedTasks: Task[]) => {
+    setTasks(updatedTasks)
+  }, [])
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -39,7 +43,11 @@ export default function WeeklyTimelinePage() {
             <TaskForm onAddTask={handleAddTask} />
           </div>
           <div className="rounded-lg border bg-white shadow">
-            <WeeklyTimeline tasks={tasks} weekDates={weekDates} />
+            <WeeklyTimeline 
+              tasks={tasks} 
+              weekDates={weekDates} 
+              onTasksUpdate={handleTasksUpdate}
+            />
           </div>
         </div>
       </div>
