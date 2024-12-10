@@ -13,11 +13,15 @@ export function getWeekDates(date: Date): Date[] {
 }
 
 export function formatDate(date: Date): string {
-  return format(date, 'M/d (E)', { locale: ko })
+  return format(date, 'MM/dd', { locale: ko })
 }
 
 export function formatDateRange(startDate: Date, endDate: Date): string {
   return `${format(startDate, 'yyyy년 M월 d일', { locale: ko })} - ${format(endDate, 'M월 d일', { locale: ko })}`
+}
+
+export function formatTaskDateRange(startDate: Date, endDate: Date): string {
+  return `${format(startDate, 'MM/dd')} - ${format(endDate, 'MM/dd')}`
 }
 
 export function getTimePosition(date: Date, startDate: Date, endDate: Date): number {

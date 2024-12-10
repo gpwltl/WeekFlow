@@ -49,7 +49,7 @@ export function WeeklyTimeline({ tasks, weekDates }: WeeklyTimelineProps) {
                 <div className="font-medium truncate">{task.title}</div>
                 <div className="text-xs mt-1">
                   <div>{task.author}</div>
-                  <div>{format(new Date(task.startDate), 'HH:mm')} - {format(new Date(task.endDate), 'HH:mm')}</div>
+                  <div>{format(new Date(task.startDate), 'MM/dd')} - {format(new Date(task.endDate), 'MM/dd')}</div>
                 </div>
               </div>
             ))}
