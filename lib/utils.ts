@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { startOfWeek, addDays, format, isWeekend } from 'date-fns'
+import { startOfWeek, addDays, format, isWeekend, differenceInDays } from 'date-fns'
 import { ko } from 'date-fns/locale'
 
 export function cn(...inputs: ClassValue[]) {
@@ -18,5 +18,18 @@ export function formatDate(date: Date): string {
 
 export function formatDateRange(startDate: Date, endDate: Date): string {
   return `${format(startDate, 'yyyy년 M월 d일', { locale: ko })} - ${format(endDate, 'M월 d일', { locale: ko })}`
+}
+
+export function getTimePosition(date: Date, startDate: Date, endDate: Date): number {
+  // 시작일로부터의 일수 차이 계산
+  const daysDiff = differenceInDays(date, startDate)
+  // 전체 기간 계산
+  const totalDays = differenceInDays(endDate, startDate) + 1
+  
+  // 위치를 백분율로 계산
+  const position = (daysDiff / totalDays) * 100
+
+  // 0-100 사이의 값으로 제한
+  return Math.max(0, Math.min(100, position))
 }
 

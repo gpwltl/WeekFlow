@@ -2,57 +2,57 @@
 
 import { useMemo } from 'react'
 import { Task } from '@/lib/data'
-import { getTimePosition, formatTime } from '@/lib/utils'
+import { getTimePosition, formatDate } from '@/lib/utils'
 
 interface TimelineProps {
   tasks: Task[]
-  date: Date
+  weekDates: Date[]
 }
 
-export function Timeline({ tasks, date }: TimelineProps) {
-  const startHour = 8
-  const endHour = 18
-  const hours = Array.from({ length: endHour - startHour + 1 }, (_, i) => startHour + i)
+export function Timeline({ tasks, weekDates }: TimelineProps) {
+  // 주간의 시작일과 종료일
+  const startDate = weekDates[0]
+  const endDate = weekDates[weekDates.length - 1]
 
-  const dayTasks = useMemo(() => {
-    return tasks.filter(task => 
-      task.startTime.getDate() === date.getDate() &&
-      task.startTime.getMonth() === date.getMonth() &&
-      task.startTime.getFullYear() === date.getFullYear()
-    )
-  }, [tasks, date])
+  // 해당 주의 태스크만 필터링
+  const weekTasks = useMemo(() => {
+    return tasks.filter(task => {
+      const taskStart = new Date(task.startDate)
+      return taskStart >= startDate && taskStart <= endDate
+    })
+  }, [tasks, startDate, endDate])
 
   return (
     <div className="w-full overflow-x-auto">
       <div className="min-w-[800px] p-6">
-        {/* Time markers */}
+        {/* 날짜 표시 */}
         <div className="relative h-8 border-b border-gray-200">
-          {hours.map(hour => (
+          {weekDates.map((date) => (
             <div
-              key={hour}
+              key={date.toISOString()}
               className="absolute text-sm text-gray-500"
-              style={{ left: `${getTimePosition(new Date(2024, 0, 1, hour), startHour, endHour)}%` }}
+              style={{ left: `${getTimePosition(date, startDate, endDate)}%` }}
             >
-              {`${hour}:00`}
+              {formatDate(date)}
             </div>
           ))}
         </div>
 
         {/* Timeline content */}
         <div className="relative mt-4 h-[200px]">
-          {/* Background grid */}
-          {hours.map(hour => (
+          {/* 세로 구분선 */}
+          {weekDates.map((date) => (
             <div
-              key={hour}
+              key={date.toISOString()}
               className="absolute h-full w-px bg-gray-100"
-              style={{ left: `${getTimePosition(new Date(2024, 0, 1, hour), startHour, endHour)}%` }}
+              style={{ left: `${getTimePosition(date, startDate, endDate)}%` }}
             />
           ))}
 
           {/* Tasks */}
-          {dayTasks.map((task, index) => {
-            const startPosition = getTimePosition(task.startTime, startHour, endHour)
-            const endPosition = getTimePosition(task.endTime, startHour, endHour)
+          {weekTasks.map((task, index) => {
+            const startPosition = getTimePosition(task.startDate, startDate, endDate)
+            const endPosition = getTimePosition(task.endDate, startDate, endDate)
             const width = endPosition - startPosition
 
             return (
@@ -78,7 +78,7 @@ export function Timeline({ tasks, date }: TimelineProps) {
                   <div className="flex items-center justify-between">
                     <span className="font-medium truncate">{task.title}</span>
                     <span className="text-xs">
-                      {formatTime(task.startTime)} - {formatTime(task.endTime)}
+                      {formatDate(task.startDate)} - {formatDate(task.endDate)}
                     </span>
                   </div>
                   <div className="text-xs opacity-75">{task.author}</div>

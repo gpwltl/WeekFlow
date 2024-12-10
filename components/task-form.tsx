@@ -93,16 +93,6 @@ export function TaskForm({ onAddTask }: TaskFormProps) {
           <SelectItem value="completed">완료</SelectItem>
         </SelectContent>
       </Select>
-      <Select value={type} onValueChange={(value: Task['type']) => setType(value)}>
-        <SelectTrigger>
-          <SelectValue placeholder="업무 유형" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="task">일반 업무</SelectItem>
-          <SelectItem value="bug">버그</SelectItem>
-          <SelectItem value="feature">기능 개발</SelectItem>
-        </SelectContent>
-      </Select>
       <Button type="submit">일정 추가</Button>
     </form>
   )

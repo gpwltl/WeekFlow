@@ -1,8 +1,7 @@
 "use client"
 
-import { useMemo } from 'react'
 import { Task } from '@/lib/data'
-import { formatDate } from '@/lib/utils'
+import { format, isSameDay } from 'date-fns'
 
 interface WeeklyTimelineProps {
   tasks: Task[]
@@ -10,46 +9,52 @@ interface WeeklyTimelineProps {
 }
 
 export function WeeklyTimeline({ tasks, weekDates }: WeeklyTimelineProps) {
-  const groupedTasks = useMemo(() => {
-    return weekDates.map(date => ({
-      date,
-      tasks: tasks.filter(task => 
-        (task.startDate <= date && task.endDate >= date)
-      )
-    }))
-  }, [tasks, weekDates])
+  const getStatusColor = (status: Task['status']) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-400'
+      case 'in-progress': return 'bg-blue-400'
+      case 'completed': return 'bg-green-400'
+      default: return 'bg-gray-400'
+    }
+  }
+
+  const getTasksForDate = (date: Date) => {
+    return tasks.filter(task => 
+      isSameDay(new Date(task.startDate), date) || 
+      isSameDay(new Date(task.endDate), date)
+    )
+  }
 
   return (
-    <div className="w-full overflow-x-auto">
-      <div className="min-w-[800px] p-6">
-        <div className="grid grid-cols-5 gap-4"> {/* Changed from grid-cols-7 to grid-cols-5 */}
-          {groupedTasks.map(({ date, tasks }) => (
-            <div key={date.toISOString()} className="space-y-2">
-              <h3 className="text-lg font-semibold">{formatDate(date)}</h3>
-              <div className="space-y-2">
-                {tasks.map((task) => (
-                  <div
-                    key={task.id}
-                    className="rounded-lg p-2 text-sm bg-blue-500 text-white"
-                  >
-                    <div className="font-medium truncate">{task.title}</div>
-                    <div className="text-xs truncate">{task.content}</div>
-                    <div className="flex justify-between items-end mt-1">
-                      <span className="text-xs opacity-75">{task.author}</span>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        task.status === 'completed' ? 'bg-green-700' :
-                        task.status === 'in-progress' ? 'bg-yellow-700' : 'bg-red-700'
-                      }`}>
-                        {task.status === 'completed' ? '완료' : 
-                         task.status === 'in-progress' ? '진행중' : '대기중'}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+    <div className="p-6">
+      {/* 요일 헤더 */}
+      <div className="grid grid-cols-5 gap-4 mb-4">
+        {weekDates.map((date) => (
+          <div key={date.toISOString()} className="text-center">
+            <div className="font-medium">{format(date, 'EEE')}</div>
+            <div className="text-sm text-gray-500">{format(date, 'MM/dd')}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* 타임라인 그리드 */}
+      <div className="grid grid-cols-5 gap-4">
+        {weekDates.map((date) => (
+          <div key={date.toISOString()} className="min-h-[200px] border-l border-gray-200 p-2">
+            {getTasksForDate(date).map((task) => (
+              <div
+                key={task.id}
+                className={`${getStatusColor(task.status)} rounded-md p-2 mb-2 text-sm shadow-sm`}
+              >
+                <div className="font-medium truncate">{task.title}</div>
+                <div className="text-xs mt-1">
+                  <div>{task.author}</div>
+                  <div>{format(new Date(task.startDate), 'HH:mm')} - {format(new Date(task.endDate), 'HH:mm')}</div>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ))}
       </div>
     </div>
   )
