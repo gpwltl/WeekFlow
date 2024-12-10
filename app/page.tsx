@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { WeeklyTimeline } from '@/components/weekly-timeline'
 import { TaskForm } from '@/components/task-form'
 import { testData, Task } from '@/lib/data'

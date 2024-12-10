@@ -9,20 +9,36 @@ interface WeeklyTimelineProps {
 }
 
 export function WeeklyTimeline({ tasks, weekDates }: WeeklyTimelineProps) {
+  const startDate = weekDates[0]
+  const endDate = weekDates[weekDates.length - 1]
+
   const getStatusColor = (status: Task['status']) => {
     switch (status) {
-      case 'pending': return 'bg-yellow-400'
-      case 'in-progress': return 'bg-blue-400'
-      case 'completed': return 'bg-green-400'
+      case 'pending': return 'bg-yellow-400' //대기중
+      case 'in-progress': return 'bg-blue-400'  //진행중 
+      case 'completed': return 'bg-green-400' //완료
       default: return 'bg-gray-400'
     }
   }
 
-  const getTasksForDate = (date: Date) => {
-    return tasks.filter(task => 
-      isSameDay(new Date(task.startDate), date) || 
-      isSameDay(new Date(task.endDate), date)
+  // 주간에 해당하는 태스크만 필터링
+  const weekTasks = tasks.filter(task => {
+    const taskStart = new Date(task.startDate)
+    const taskEnd = new Date(task.endDate)
+    return taskStart <= endDate && taskEnd >= startDate
+  })
+
+  // 태스크를 시작일 기준으로 정렬
+  const sortedTasks = weekTasks.sort((a, b) => 
+    new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+  )
+
+  // 날짜별 칸의 너비 계산 (20%씩)
+  const getTaskPosition = (date: Date) => {
+    const dayIndex = weekDates.findIndex(d => 
+      isSameDay(d, date)
     )
+    return dayIndex * 20 // 각 칸이 20%
   }
 
   return (
@@ -37,24 +53,45 @@ export function WeeklyTimeline({ tasks, weekDates }: WeeklyTimelineProps) {
         ))}
       </div>
 
-      {/* 타임라인 그리드 */}
-      <div className="grid grid-cols-5 gap-4">
-        {weekDates.map((date) => (
-          <div key={date.toISOString()} className="min-h-[200px] border-l border-gray-200 p-2">
-            {getTasksForDate(date).map((task) => (
-              <div
-                key={task.id}
-                className={`${getStatusColor(task.status)} rounded-md p-2 mb-2 text-sm shadow-sm`}
-              >
-                <div className="font-medium truncate">{task.title}</div>
-                <div className="text-xs mt-1">
-                  <div>{task.author}</div>
-                  <div>{format(new Date(task.startDate), 'MM/dd')} - {format(new Date(task.endDate), 'MM/dd')}</div>
+      {/* 타임라인 */}
+      <div className="relative">
+        {/* 배경 그리드 */}
+        <div className="grid grid-cols-5 gap-4">
+          {weekDates.map((date) => (
+            <div key={date.toISOString()} className="h-full border-l border-gray-200" />
+          ))}
+        </div>
+
+        {/* 태스크 */}
+        <div className="absolute top-0 left-0 w-full">
+          <div className="relative min-h-[200px] space-y-2 pt-2">
+            {sortedTasks.map((task, index) => {
+              const taskStart = new Date(task.startDate)
+              const taskEnd = new Date(task.endDate)
+              
+              const startPos = getTaskPosition(taskStart)
+              const endPos = getTaskPosition(taskEnd)
+              const width = endPos - startPos + 20 // 마지막 날짜의 칸도 포함
+
+              return (
+                <div
+                  key={task.id}
+                  className={`absolute h-6 ${getStatusColor(task.status)} rounded-md shadow-sm transition-all`}
+                  style={{
+                    left: `${startPos}%`,
+                    width: `${width}%`,
+                    top: `${index * 32}px`,
+                  }}
+                >
+                  <div className="px-2 h-full flex items-center whitespace-nowrap overflow-hidden">
+                    <span className="text-xs font-medium text-white">{task.title}</span>
+                    <span className="text-[10px] text-white/75 ml-1">{task.author}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
-        ))}
+        </div>
       </div>
     </div>
   )
