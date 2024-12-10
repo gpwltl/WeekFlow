@@ -1,9 +1,11 @@
 import { SQLiteTaskRepository } from '@/src/task/repositories/SQLiteTaskRepository';
-import { TaskUseCases } from '@/src/task/usecases/TaskUseCases';
+import { CreateTaskUseCase } from '@/src/task/usecases/CreateTaskUseCase';
+import { GetWeeklyTasksUseCase } from '@/src/task/usecases/GetWeeklyTasksUseCase';
 import { NextResponse } from 'next/server';
 
 const taskRepository = new SQLiteTaskRepository();
-const taskUseCases = new TaskUseCases(taskRepository);
+const getWeeklyTasksUseCase = new GetWeeklyTasksUseCase(taskRepository);
+const createTaskUseCase = new CreateTaskUseCase(taskRepository);
 
 export async function GET(request: Request) {
   try {
@@ -13,7 +15,7 @@ export async function GET(request: Request) {
 
     let tasks;
     if (startDate && endDate) {
-      tasks = await taskUseCases.getWeeklyTasks(
+      tasks = await getWeeklyTasksUseCase.execute(
         new Date(startDate),
         new Date(endDate)
       );
@@ -34,7 +36,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const newTask = await taskUseCases.createTask(body);
+    const newTask = await createTaskUseCase.execute(body);
     return NextResponse.json(newTask);
   } catch (error) {
     console.error('Error creating task:', error);

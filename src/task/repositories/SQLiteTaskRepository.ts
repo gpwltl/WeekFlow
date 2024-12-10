@@ -1,10 +1,11 @@
 import { db, tasks } from '@/shared/db'
 import { eq, and, gte, lte } from 'drizzle-orm'
-import { TaskRepository } from '@/src/task/repositories/TaskRepository'
-import { Task } from '@/src/task/entities/Task'
+import { TaskReader } from './TaskReader'
+import { TaskWriter } from './TaskWriter'
+import { Task } from '../entities/Task'
 import { randomUUID } from 'crypto'
 
-export class SQLiteTaskRepository implements TaskRepository {
+export class SQLiteTaskRepository implements TaskReader, TaskWriter {
   async findAll(): Promise<Task[]> {
     return db.select().from(tasks)
   }
