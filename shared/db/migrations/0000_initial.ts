@@ -19,7 +19,6 @@ async function main() {
         start_date TEXT NOT NULL,
         end_date TEXT NOT NULL,
         author TEXT NOT NULL,
-        type TEXT CHECK(type IN ('meeting', 'task', 'break')) NOT NULL,
         status TEXT CHECK(status IN ('pending', 'in-progress', 'completed')) NOT NULL
       );
     `);

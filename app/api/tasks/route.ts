@@ -35,14 +35,14 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const newTask = await createTaskUseCase.execute(body);
-    return NextResponse.json(newTask);
+    const taskData = await request.json();
+    const task = await createTaskUseCase.execute(taskData);
+    return NextResponse.json(task);
   } catch (error) {
-    console.error('Error creating task:', error);
+    console.error('Failed to create task:', error);
     return NextResponse.json(
-      { error: 'Failed to create task' },
-      { status: 500 }
+      { error: error instanceof Error ? error.message : 'Unknown error occurred' },
+      { status: 400 }
     );
   }
 } 

@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "db:generate": "drizzle-kit generate:sqlite",
     "db:migrate": "tsx shared/db/migrations/0000_initial.ts",
     "db:seed": "tsx shared/db/seed.ts"
   },

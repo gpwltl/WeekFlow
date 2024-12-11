@@ -7,7 +7,6 @@ export const tasks = sqliteTable('tasks', {
   start_date: text('start_date').notNull(),
   end_date: text('end_date').notNull(),
   author: text('author').notNull(),
-  type: text('type', { enum: ['meeting', 'task', 'break'] }).notNull(),
   status: text('status', { enum: ['pending', 'in-progress', 'completed'] }).notNull(),
 });
 

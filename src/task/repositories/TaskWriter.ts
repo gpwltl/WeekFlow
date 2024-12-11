@@ -1,7 +1,7 @@
-import { Task } from "../entities/Task"
+import { Task, TaskData } from "../entities/Task"
 
 export interface TaskWriter {
-  create(task: Omit<Task, 'id'>): Promise<Task>
-  update(id: string, task: Partial<Task>): Promise<Task>
+  create(task: TaskData): Promise<Task>
+  update(id: string, task: Partial<TaskData>): Promise<Task>
   delete(id: string): Promise<void>
 } 

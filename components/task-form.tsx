@@ -12,40 +12,68 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Task } from '@/src/task/entities/Task'
+import { TaskData } from '@/src/task/entities/Task'
 
 interface TaskFormProps {
-  onAddTask: (task: Omit<Task, 'id'>) => void
+  onTaskAdded?: (task: TaskData & { id: string }) => void  // 선택적 콜백
 }
 
-export function TaskForm({ onAddTask }: TaskFormProps) {
+export function TaskForm({ onTaskAdded }: TaskFormProps) {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [startDate, setStartDate] = useState<Date | undefined>()
   const [endDate, setEndDate] = useState<Date | undefined>()
   const [author, setAuthor] = useState('')
-  const [status, setStatus] = useState<Task['status']>('pending')
-  const [type, setType] = useState<Task['type']>('task')
+  const [status, setStatus] = useState<TaskData['status']>('pending')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (title && content && startDate && endDate && author) {
-      onAddTask({
-        title,
-        content,
-        start_date: startDate.toISOString(),
-        end_date: endDate.toISOString(), 
-        author,
-        status,
-        type,
-      })
-      setTitle('')
-      setContent('')
-      setStartDate(undefined)
-      setEndDate(undefined)
-      setAuthor('')
-      setStatus('pending')
-      setType('task')
+      try {
+        setIsSubmitting(true)
+        
+        const taskData: TaskData = {
+          title,
+          content,
+          start_date: startDate.toISOString(),
+          end_date: endDate.toISOString(), 
+          author,
+          status,
+        }
+
+        const response = await fetch('/api/tasks', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(taskData),
+        })
+
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.message || 'Failed to create task')
+        }
+
+        const newTask = await response.json()
+        
+        // 폼 초기화
+        setTitle('')
+        setContent('')
+        setStartDate(undefined)
+        setEndDate(undefined)
+        setAuthor('')
+        setStatus('pending')
+
+        // 부모 컴포넌트에 새로운 태스크 알림
+        onTaskAdded?.(newTask)
+
+      } catch (error) {
+        console.error('Failed to create task:', error)
+        // TODO: 에러 처리 (예: 토스트 메시지)
+      } finally {
+        setIsSubmitting(false)
+      }
     }
   }
 
@@ -83,7 +111,7 @@ export function TaskForm({ onAddTask }: TaskFormProps) {
         onChange={(e) => setAuthor(e.target.value)}
         required
       />
-      <Select value={status} onValueChange={(value: Task['status']) => setStatus(value)}>
+      <Select value={status} onValueChange={(value: TaskData['status']) => setStatus(value)}>
         <SelectTrigger>
           <SelectValue placeholder="진행 상황" />
         </SelectTrigger>
@@ -93,7 +121,9 @@ export function TaskForm({ onAddTask }: TaskFormProps) {
           <SelectItem value="completed">완료</SelectItem>
         </SelectContent>
       </Select>
-      <Button type="submit">일정 추가</Button>
+      <Button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? '추가 중...' : '일정 추가'}
+      </Button>
     </form>
   )
 }
