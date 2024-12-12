@@ -3,6 +3,11 @@
 import { Task } from '@/src/task/entities/Task'
 import { format, isSameDay } from 'date-fns'
 import { useState, useEffect } from 'react'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 
 interface WeeklyTimelineProps {
   tasks: Task[]
@@ -83,7 +88,7 @@ export const WeeklyTimeline: React.FC<WeeklyTimelineProps> = ({
     new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
   )
 
-  // 날짜별 칸의 너비 계산 (20%씩)
+  // 날짜별 칸의 너비 산 (20%씩)
   const getTaskPosition = (date: Date) => {
     const dayIndex = weekDates.findIndex(d => 
       isSameDay(d, date)
@@ -121,23 +126,58 @@ export const WeeklyTimeline: React.FC<WeeklyTimelineProps> = ({
               
               const startPos = getTaskPosition(taskStart)
               const endPos = getTaskPosition(taskEnd)
-              const width = endPos - startPos + 20 // 마지막 날짜의 칸도 포함
+              const width = endPos - startPos + 20
 
               return (
-                <div
-                  key={task.id}
-                  className={`absolute h-6 ${getStatusColor(task.status)} rounded-md shadow-sm transition-all`}
-                  style={{
-                    left: `${startPos}%`,
-                    width: `${width}%`,
-                    top: `${index * 32}px`,
-                  }}
-                >
-                  <div className="px-2 h-full flex items-center whitespace-nowrap overflow-hidden">
-                    <span className="text-xs font-medium text-white">{task.title}</span>
-                    <span className="text-[10px] text-white/75 ml-1">{task.author}</span>
-                  </div>
-                </div>
+                <Popover key={task.id}>
+                  <PopoverTrigger asChild>
+                    <div
+                      className={`absolute h-6 ${getStatusColor(task.status)} rounded-md shadow-sm transition-all 
+                        hover:brightness-110 cursor-pointer`}
+                      style={{
+                        left: `${startPos}%`,
+                        width: `${width}%`,
+                        top: `${index * 32}px`,
+                      }}
+                    >
+                      <div className="px-2 h-full flex items-center whitespace-nowrap overflow-hidden">
+                        <span className="text-xs font-medium text-white">{task.title}</span>
+                        <span className="text-[10px] text-white/75 ml-1">{task.author}</span>
+                      </div>
+                    </div>
+                  </PopoverTrigger>
+                  <PopoverContent 
+                    className="w-80 p-4 bg-gray-100/95 backdrop-blur-sm border shadow-lg" 
+                    side="right"
+                  >
+                    <div className="space-y-2">
+                      <div>
+                        <h3 className="font-semibold text-lg">{task.title}</h3>
+                        <div className="text-sm text-gray-500">
+                          작성자: {task.author}
+                        </div>
+                      </div>
+                      <div className="text-sm space-y-1">
+                        <div>
+                          {format(new Date(task.start_date), 'yyyy년 MM월 dd일')} ~ {format(new Date(task.end_date), 'yyyy년 MM월 dd일')}
+                        </div>
+                      </div>
+                      <div className="pt-2 border-t">
+                        <div className="text-sm font-medium mb-1">업무 내용</div>
+                        <p className="text-sm text-gray-600">{task.content}</p>
+                      </div>
+                      <div className="pt-2">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                          ${task.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            task.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
+                            'bg-yellow-100 text-yellow-800'}`}>
+                          {task.status === 'completed' ? '완료' :
+                           task.status === 'in-progress' ? '진행중' : '대기중'}
+                        </span>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               )
             })}
           </div>
