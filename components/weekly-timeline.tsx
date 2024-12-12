@@ -16,13 +16,15 @@ interface WeeklyTimelineProps {
   weekDates: Date[]
   onTasksUpdate?: (tasks: Task[]) => void
   onEditTask?: (task: Task) => void
+  onDeleteTask?: (taskId: string) => void
 }
 
 export const WeeklyTimeline: React.FC<WeeklyTimelineProps> = ({ 
   tasks, 
   weekDates,
   onTasksUpdate,
-  onEditTask
+  onEditTask,
+  onDeleteTask
 }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -104,6 +106,12 @@ export const WeeklyTimeline: React.FC<WeeklyTimelineProps> = ({
     onEditTask?.(task)
   }
 
+  const handleDeleteClick = async (taskId: string) => {
+    if (window.confirm('정말 삭제하시겠습니까?')) {
+      onDeleteTask?.(taskId)
+    }
+  }
+
   return (
     <div className="p-6 pr-12">
       {/* 요일 헤더 */}
@@ -166,13 +174,22 @@ export const WeeklyTimeline: React.FC<WeeklyTimelineProps> = ({
                             작성자: {task.author}
                           </div>
                         </div>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleEditClick(task)}
-                        >
-                          수정
-                        </Button>
+                        <div className="flex space-x-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleEditClick(task)}
+                          >
+                            수정
+                          </Button>
+                          <Button 
+                            variant="destructive" 
+                            size="sm"
+                            onClick={() => handleDeleteClick(task.id)}
+                          >
+                            삭제
+                          </Button>
+                        </div>
                       </div>
                       <div className="text-sm space-y-1">
                         <div>

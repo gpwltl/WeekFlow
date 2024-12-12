@@ -70,6 +70,25 @@ export default function WeeklyTimelinePage() {
     }
   }
 
+  // 태스크 삭제 처리
+  const handleTaskDeleted = async (taskId: string) => {
+    try {
+      const response = await fetch(`/api/tasks/${taskId}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete task')
+      }
+
+      // 목록 새로고침
+      fetchTasks()
+    } catch (error) {
+      console.error('Error deleting task:', error)
+      alert('일정 삭제에 실패했습니다.')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 pr-12">
       <div className="container mx-auto px-4">
@@ -107,6 +126,7 @@ export default function WeeklyTimelinePage() {
                 weekDates={weekDates} 
                 onTasksUpdate={handleTasksUpdate}
                 onEditTask={setEditingTask}
+                onDeleteTask={handleTaskDeleted}
               />
             )}
           </div>
