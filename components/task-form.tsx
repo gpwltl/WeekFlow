@@ -50,12 +50,11 @@ export function TaskForm({ onTaskAdded }: TaskFormProps) {
           body: JSON.stringify(taskData),
         })
 
-        if (!response.ok) {
-          const error = await response.json()
-          throw new Error(error.message || 'Failed to create task')
-        }
+        const result = await response.json()
 
-        const newTask = await response.json()
+        if (!response.ok) {
+          throw new Error(result.error || '일정 추가에 실패했습니다.')
+        }
         
         // 폼 초기화
         setTitle('')
@@ -66,11 +65,13 @@ export function TaskForm({ onTaskAdded }: TaskFormProps) {
         setStatus('pending')
 
         // 부모 컴포넌트에 새로운 태스크 알림
-        onTaskAdded?.(newTask)
+        onTaskAdded?.(result)
 
       } catch (error) {
         console.error('Failed to create task:', error)
-        // TODO: 에러 처리 (예: 토스트 메시지)
+        if (error instanceof Error) {
+          alert(error.message)
+        }
       } finally {
         setIsSubmitting(false)
       }
