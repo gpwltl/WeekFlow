@@ -41,5 +41,10 @@ export class CreateTaskUseCase {
     if (daysDiff > 30) {
       throw new TaskValidationError('태스크 기간은 30일을 초과할 수 없습니다')
     }
+
+    // 비즈니스 규칙 3: 새로운 태스크의 초기 상태는 'pending' 또는 'in-progress'만 가능
+    if (taskData.status === 'completed') {
+      throw new TaskValidationError('새로운 태스크는 완료 상태로 생성할 수 없습니다')
+    }
   }
 } 

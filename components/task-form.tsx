@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -15,10 +15,20 @@ import {
 import { TaskData } from '@/src/task/entities/Task'
 
 interface TaskFormProps {
-  onTaskAdded?: (task: TaskData & { id: string }) => void  // 선택적 콜백
+  mode?: 'create' | 'edit'
+  initialData?: TaskData & { id: string }
+  onTaskAdded?: (task: TaskData & { id: string }) => void
+  onTaskUpdated?: (task: TaskData & { id: string }) => void
+  onCancel?: () => void
 }
 
-export function TaskForm({ onTaskAdded }: TaskFormProps) {
+export function TaskForm({ 
+  mode = 'create', 
+  initialData,
+  onTaskAdded,
+  onTaskUpdated,
+  onCancel 
+}: TaskFormProps) {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [startDate, setStartDate] = useState<Date | undefined>()
@@ -26,6 +36,32 @@ export function TaskForm({ onTaskAdded }: TaskFormProps) {
   const [author, setAuthor] = useState('')
   const [status, setStatus] = useState<TaskData['status']>('pending')
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // 폼 초기화 함수
+  const resetForm = () => {
+    setTitle('')
+    setContent('')
+    setStartDate(undefined)
+    setEndDate(undefined)
+    setAuthor('')
+    setStatus('pending')
+  }
+
+  // mode나 initialData가 변경될 때마다 실행
+  useEffect(() => {
+    if (mode === 'edit' && initialData) {
+      // 수정 모드일 때는 초기 데이터로 설정
+      setTitle(initialData.title)
+      setContent(initialData.content)
+      setStartDate(new Date(initialData.start_date))
+      setEndDate(new Date(initialData.end_date))
+      setAuthor(initialData.author)
+      setStatus(initialData.status)
+    } else if (mode === 'create') {
+      // 생성 모드로 전환될 때는 폼 초기화
+      resetForm()
+    }
+  }, [mode, initialData])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -42,8 +78,12 @@ export function TaskForm({ onTaskAdded }: TaskFormProps) {
           status,
         }
 
-        const response = await fetch('/api/tasks', {
-          method: 'POST',
+        const url = mode === 'edit' && initialData 
+          ? `/api/tasks/${initialData.id}`
+          : '/api/tasks'
+
+        const response = await fetch(url, {
+          method: mode === 'edit' ? 'PUT' : 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
@@ -53,22 +93,19 @@ export function TaskForm({ onTaskAdded }: TaskFormProps) {
         const result = await response.json()
 
         if (!response.ok) {
-          throw new Error(result.error || '일정 추가에 실패했습니다.')
+          throw new Error(result.error || '일정 추리에 실패했습니다.')
         }
-        
-        // 폼 초기화
-        setTitle('')
-        setContent('')
-        setStartDate(undefined)
-        setEndDate(undefined)
-        setAuthor('')
-        setStatus('pending')
 
-        // 부모 컴포넌트에 새로운 태스크 알림
-        onTaskAdded?.(result)
+        // 콜백 호출
+        if (mode === 'edit') {
+          onTaskUpdated?.(result)
+        } else {
+          onTaskAdded?.(result)
+          resetForm()  // 생성 모드에서만 폼 초기화
+        }
 
       } catch (error) {
-        console.error('Failed to create task:', error)
+        console.error('Failed to process task:', error)
         if (error instanceof Error) {
           alert(error.message)
         }
@@ -76,6 +113,12 @@ export function TaskForm({ onTaskAdded }: TaskFormProps) {
         setIsSubmitting(false)
       }
     }
+  }
+
+  // 취소 핸들러
+  const handleCancel = () => {
+    resetForm()  // 폼 초기화
+    onCancel?.()  // 부모 컴포넌트에 취소 알림
   }
 
   return (
@@ -122,9 +165,25 @@ export function TaskForm({ onTaskAdded }: TaskFormProps) {
           <SelectItem value="completed">완료</SelectItem>
         </SelectContent>
       </Select>
-      <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? '추가 중...' : '일정 추가'}
-      </Button>
+      <div className="flex justify-end space-x-2">
+        <Button 
+          type="submit" 
+          className="w-20"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? '처리중' : mode === 'edit' ? '수정' : '추가'}
+        </Button>
+        {mode === 'edit' && (
+          <Button 
+            type="button" 
+            variant="outline" 
+            className="w-20"
+            onClick={handleCancel}
+          >
+            취소
+          </Button>
+        )}
+      </div>
     </form>
   )
 }

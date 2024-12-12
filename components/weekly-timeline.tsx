@@ -3,6 +3,8 @@
 import { Task } from '@/src/task/entities/Task'
 import { format, isSameDay } from 'date-fns'
 import { useState, useEffect } from 'react'
+import { Button } from "@/components/ui/button"
+import { TaskForm } from './task-form'
 import {
   Popover,
   PopoverContent,
@@ -13,12 +15,14 @@ interface WeeklyTimelineProps {
   tasks: Task[]
   weekDates: Date[]
   onTasksUpdate?: (tasks: Task[]) => void
+  onEditTask?: (task: Task) => void
 }
 
 export const WeeklyTimeline: React.FC<WeeklyTimelineProps> = ({ 
   tasks, 
   weekDates,
-  onTasksUpdate 
+  onTasksUpdate,
+  onEditTask
 }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -96,8 +100,12 @@ export const WeeklyTimeline: React.FC<WeeklyTimelineProps> = ({
     return dayIndex * 20 // 각 칸이 20%
   }
 
+  const handleEditClick = (task: Task) => {
+    onEditTask?.(task)
+  }
+
   return (
-    <div className="p-6">
+    <div className="p-6 pr-12">
       {/* 요일 헤더 */}
       <div className="grid grid-cols-5 gap-4 mb-4">
         {weekDates.map((date) => (
@@ -151,11 +159,20 @@ export const WeeklyTimeline: React.FC<WeeklyTimelineProps> = ({
                     side="right"
                   >
                     <div className="space-y-2">
-                      <div>
-                        <h3 className="font-semibold text-lg">{task.title}</h3>
-                        <div className="text-sm text-gray-500">
-                          작성자: {task.author}
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-semibold text-lg">{task.title}</h3>
+                          <div className="text-sm text-gray-500">
+                            작성자: {task.author}
+                          </div>
                         </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleEditClick(task)}
+                        >
+                          수정
+                        </Button>
                       </div>
                       <div className="text-sm space-y-1">
                         <div>

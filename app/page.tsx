@@ -12,6 +12,7 @@ export default function WeeklyTimelinePage() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const weekDates = useMemo(() => getWeekDates(selectedDate), [selectedDate])
+  const [editingTask, setEditingTask] = useState<Task | null>(null)
 
   // 태스크 목록 불러오기
   const fetchTasks = async () => {
@@ -44,8 +45,33 @@ export default function WeeklyTimelinePage() {
     setTasks(updatedTasks)
   }, [])
 
+  // 태스크 수정 완료 처리
+  const handleTaskUpdated = async (updatedTask: TaskData & { id: string }) => {
+    try {
+      const response = await fetch(`/api/tasks/${updatedTask.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedTask),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update task')
+      }
+
+      // 목록 새로고침
+      fetchTasks()
+      // 수정 모드 해제
+      setEditingTask(null)
+    } catch (error) {
+      console.error('Error updating task:', error)
+      alert('일정 수정에 실패했습니다.')
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 py-8 pr-12">
       <div className="container mx-auto px-4">
         <div className="mb-8 flex items-center justify-between">
           <h1 className="text-3xl font-bold">주간 일정 타임라인</h1>
@@ -59,10 +85,18 @@ export default function WeeklyTimelinePage() {
             />
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-[40%_60%] gap-8">
           <div className="rounded-lg border bg-white shadow p-6">
-            <h2 className="text-2xl font-bold mb-4">새 일정 추가</h2>
-            <TaskForm onTaskAdded={handleTaskAdded} />
+            <h2 className="text-2xl font-bold mb-4">
+              {editingTask ? '일정 수정' : '새 일정 추가'}
+            </h2>
+            <TaskForm 
+              mode={editingTask ? 'edit' : 'create'}
+              initialData={editingTask || undefined}
+              onTaskAdded={handleTaskAdded}
+              onTaskUpdated={handleTaskUpdated}
+              onCancel={() => setEditingTask(null)}
+            />
           </div>
           <div className="rounded-lg border bg-white shadow">
             {isLoading ? (
@@ -72,6 +106,7 @@ export default function WeeklyTimelinePage() {
                 tasks={tasks} 
                 weekDates={weekDates} 
                 onTasksUpdate={handleTasksUpdate}
+                onEditTask={setEditingTask}
               />
             )}
           </div>
