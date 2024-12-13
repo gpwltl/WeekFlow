@@ -10,6 +10,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface WeeklyTimelineProps {
   tasks: Task[]
@@ -17,6 +24,7 @@ interface WeeklyTimelineProps {
   onTasksUpdate?: (tasks: Task[]) => void
   onEditTask?: (task: Task) => void
   onDeleteTask?: (taskId: string) => void
+  onStatusChange?: (taskId: string, newStatus: Task['status']) => void
 }
 
 export const WeeklyTimeline: React.FC<WeeklyTimelineProps> = ({ 
@@ -24,7 +32,8 @@ export const WeeklyTimeline: React.FC<WeeklyTimelineProps> = ({
   weekDates,
   onTasksUpdate,
   onEditTask,
-  onDeleteTask
+  onDeleteTask,
+  onStatusChange
 }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -109,6 +118,34 @@ export const WeeklyTimeline: React.FC<WeeklyTimelineProps> = ({
   const handleDeleteClick = async (taskId: string) => {
     if (window.confirm('정말 삭제하시겠습니까?')) {
       onDeleteTask?.(taskId)
+    }
+  }
+
+  const handleStatusChange = async (taskId: string, newStatus: Task['status']) => {
+    try {
+      const response = await fetch(`/api/tasks/${taskId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update status')
+      }
+
+      // 목록 새로고침
+      const startDate = weekDates[0].toISOString()
+      const endDate = weekDates[weekDates.length - 1].toISOString()
+      const tasksResponse = await fetch(
+        `/api/tasks?startDate=${startDate}&endDate=${endDate}`
+      )
+      const updatedTasks = await tasksResponse.json()
+      onTasksUpdate?.(updatedTasks)
+    } catch (error) {
+      console.error('Error updating status:', error)
+      alert('상태 변경에 실패했습니다.')
     }
   }
 
@@ -201,13 +238,45 @@ export const WeeklyTimeline: React.FC<WeeklyTimelineProps> = ({
                         <p className="text-sm text-gray-600">{task.content}</p>
                       </div>
                       <div className="pt-2">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                          ${task.status === 'completed' ? 'bg-green-100 text-green-800' :
-                            task.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
-                            'bg-yellow-100 text-yellow-800'}`}>
-                          {task.status === 'completed' ? '완료' :
-                           task.status === 'in-progress' ? '진행중' : '대기중'}
-                        </span>
+                        <Select
+                          value={task.status}
+                          onValueChange={(value: Task['status']) => handleStatusChange(task.id, value)}
+                        >
+                          <SelectTrigger className="w-[120px] bg-transparent border-none p-0">
+                            <SelectValue>
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer
+                                ${task.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                  task.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
+                                  'bg-yellow-100 text-yellow-800'}`}>
+                                {task.status === 'completed' ? '완료' :
+                                 task.status === 'in-progress' ? '진행중' : '대기중'}
+                              </span>
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent 
+                            className="min-w-[100px] bg-white rounded-lg shadow-lg border-none"
+                            align="start"
+                          >
+                            <SelectItem 
+                              value="pending" 
+                              className="hover:bg-yellow-100/50 rounded-md m-1 cursor-pointer"
+                            >
+                              대기중
+                            </SelectItem>
+                            <SelectItem 
+                              value="in-progress" 
+                              className="hover:bg-blue-100/50 rounded-md m-1 cursor-pointer"
+                            >
+                              진행중
+                            </SelectItem>
+                            <SelectItem 
+                              value="completed" 
+                              className="hover:bg-green-100/50 rounded-md m-1 cursor-pointer"
+                            >
+                              완료
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                   </PopoverContent>
