@@ -1,11 +1,11 @@
-import { db } from '@/shared/db'
-import { tasks } from '@/shared/db/schema'
 import { eq, and, gte, lte } from 'drizzle-orm'
 import { TaskReader } from './TaskReader'
 import { TaskWriter } from './TaskWriter'
 import { Task, TaskData } from '../entities/Task'
 import { randomUUID } from 'crypto'
 import { TaskNotFoundError } from '../errors/TaskErrors'
+import { tasks } from '@/shared/db/schema'
+import { db } from '@/shared/db'
 
 export class SQLiteTaskRepository implements TaskReader, TaskWriter {
   async findAll(): Promise<Task[]> {
@@ -13,7 +13,7 @@ export class SQLiteTaskRepository implements TaskReader, TaskWriter {
     return dbTasks.map(task => Task.create({
       id: task.id,
       title: task.title,
-      content: task.content,
+      content: task.content ?? '',
       start_date: task.start_date,
       end_date: task.end_date,
       author: task.author,
@@ -34,7 +34,7 @@ export class SQLiteTaskRepository implements TaskReader, TaskWriter {
     return dbTasks.map(task => Task.create({
       id: task.id,
       title: task.title,
-      content: task.content,
+      content: task.content ?? '',
       start_date: task.start_date,
       end_date: task.end_date,
       author: task.author,
@@ -76,7 +76,7 @@ export class SQLiteTaskRepository implements TaskReader, TaskWriter {
     const updatedTask = Task.create({
       id,
       title: existingTask.title,
-      content: existingTask.content,
+      content: existingTask.content ?? '',
       start_date: existingTask.start_date,
       end_date: existingTask.end_date,
       author: existingTask.author,
@@ -86,7 +86,7 @@ export class SQLiteTaskRepository implements TaskReader, TaskWriter {
 
     const dbTask = {
       title: updatedTask.title,
-      content: updatedTask.content,
+      content: updatedTask.content ?? '',
       start_date: updatedTask.start_date,
       end_date: updatedTask.end_date,
       author: updatedTask.author,

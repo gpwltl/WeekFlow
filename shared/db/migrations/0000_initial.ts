@@ -19,7 +19,25 @@ async function main() {
         start_date TEXT NOT NULL,
         end_date TEXT NOT NULL,
         author TEXT NOT NULL,
-        status TEXT CHECK(status IN ('pending', 'in-progress', 'completed')) NOT NULL
+        status TEXT CHECK(status IN ('pending', 'in-progress', 'completed')) NOT NULL,
+        
+        -- 분석용 컬럼들 추가
+        started_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        completed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        estimated_duration INTEGER,
+        actual_duration INTEGER,
+        interruption_count INTEGER DEFAULT 0
+      );
+    `);
+
+    await db.run(sql`
+      CREATE TABLE IF NOT EXISTS task_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        task_id TEXT NOT NULL,
+        event_type TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        description TEXT,
+        FOREIGN KEY (task_id) REFERENCES tasks(id)
       );
     `);
     
@@ -27,7 +45,7 @@ async function main() {
   } catch (error) {
     console.error('Migration failed:', error);
   } finally {
-    process.exit(0);
+    await client.close();
   }
 }
 

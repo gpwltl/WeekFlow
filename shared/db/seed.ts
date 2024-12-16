@@ -10,16 +10,27 @@ async function seed() {
       start_date: new Date(2024, 11, 9).toISOString(),
       end_date: new Date(2024, 11, 9).toISOString(),
       author: '김철수',
-      status: 'completed' as const
+      status: 'completed' as const,
+      started_at: new Date(2024, 11, 9).toISOString(),
+      completed_at: new Date(2024, 11, 9).toISOString(),
+      estimated_duration: 100,
+      actual_duration: 100,
+      interruption_count: 0
+
     },
     {
       id: uuidv4(),
       title: '프로젝트 기획',
       content: '새 프로젝트 범위 및 일정 수립',
-      start_date: new Date(2024, 11, 10).toISOString(),
-      end_date: new Date(2024, 11, 11).toISOString(),
+      start_date: new Date(2024, 11, 16).toISOString(),
+      end_date: new Date(2024, 11, 16).toISOString(),
       author: '이영희',
-      status: 'in-progress' as const
+      status: 'in-progress' as const,
+      started_at: new Date(2024, 11, 16).toISOString(),
+      completed_at: new Date(2024, 11, 16).toISOString(),
+      estimated_duration: 100,
+      actual_duration: 100,
+      interruption_count: 0
     },
     {
       id: uuidv4(),
@@ -28,7 +39,12 @@ async function seed() {
       start_date: new Date(2024, 11, 11).toISOString(),
       end_date: new Date(2024, 11, 11).toISOString(),
       author: '박지민',
-      status: 'pending' as const
+      status: 'pending' as const,
+      started_at: new Date(2024, 11, 11).toISOString(),
+      completed_at: new Date(2024, 11, 11).toISOString(),
+      estimated_duration: 100,
+      actual_duration: 100,
+      interruption_count: 0
     },
     {
       id: uuidv4(),
@@ -37,7 +53,12 @@ async function seed() {
       start_date: new Date(2024, 11, 12).toISOString(),
       end_date: new Date(2024, 11, 12).toISOString(),
       author: '최수진',
-      status: 'pending' as const
+      status: 'pending' as const,
+      started_at: new Date(2024, 11, 12).toISOString(),
+      completed_at: new Date(2024, 11, 12).toISOString(),
+      estimated_duration: 100,
+      actual_duration: 100,
+      interruption_count: 0
     },
     {
       id: uuidv4(),
@@ -46,7 +67,12 @@ async function seed() {
       start_date: new Date(2024, 11, 12).toISOString(),
       end_date: new Date(2024, 11, 13).toISOString(),
       author: '정민우',
-      status: 'in-progress' as const
+      status: 'in-progress' as const,
+      started_at: new Date(2024, 11, 12).toISOString(),
+      completed_at: new Date(2024, 11, 13).toISOString(),
+      estimated_duration: 100,
+      actual_duration: 100,
+      interruption_count: 0
     }
   ];
 
