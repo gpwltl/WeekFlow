@@ -1,9 +1,8 @@
-import { db } from '@/shared/db';
-import { tasks, taskEvents } from '@/shared/db/schema';
-import { eq } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 import { SQLiteTaskRepository } from '@/src/task/repositories/SQLiteTaskRepository'
 import { TaskValidationError, TaskNotFoundError } from '@/src/task/errors/TaskErrors'
+import { UpdateTaskStatusUseCase } from '@/src/task/usecases/UpdateTaskStatusUseCase'
+import { SQLiteTaskEventPublisher } from '@/src/task/infrastructure/SQLiteTaskEventPublisher';
 
 const taskRepository = new SQLiteTaskRepository()
 
@@ -31,7 +30,7 @@ export async function PUT(
     }
     console.error('Error updating task:', error)
     return NextResponse.json(
-      { error: '태스크 수정에 실패했습니다.' },
+      { error: '태스크 수정에 실했습니다.' },
       { status: 500 }
     )
   }
@@ -53,55 +52,25 @@ export async function DELETE(
   }
 }
 
-export async function PATCH(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   try {
-    const body = await request.json();
-    const { status } = body;
-
-    await db.transaction(async (tx) => {
-      // 현재 작업 상태 조회
-      const currentTask = await tx
-        .select()
-        .from(tasks)
-        .where(eq(tasks.id, params.id))
-        .then(rows => rows[0]);
-
-      // 작업 상태 업데이트
-      await tx
-        .update(tasks)
-        .set({
-          status,
-          // 작업 시작 시간 기록
-          started_at: status === 'in-progress' && !currentTask.started_at 
-            ? new Date().toISOString() 
-            : currentTask.started_at,
-          // 작업 완료 시간 기록
-          completed_at: status === 'completed' 
-            ? new Date().toISOString() 
-            : currentTask.completed_at,
-          // 완료 시 실제 소요 시간 계산
-          actual_duration: status === 'completed' && currentTask.started_at
-            ? Math.floor((Date.now() - new Date(currentTask.started_at).getTime()) / 1000)
-            : currentTask.actual_duration
-        })
-        .where(eq(tasks.id, params.id));
-
-      // 이벤트 기록
-      await tx.insert(taskEvents).values({
-        task_id: params.id,
-        event_type: getEventType(status),
-        description: `Task status changed to ${status}`
-      });
-    });
-
-    return NextResponse.json({ message: 'Updated successfully' });
+    const { status } = await request.json();
+    
+    const repository = new SQLiteTaskRepository();
+    const eventPublisher = new SQLiteTaskEventPublisher();
+    
+    const useCase = new UpdateTaskStatusUseCase(
+      repository, 
+      repository,
+      eventPublisher
+    );
+    
+    const updatedTask = await useCase.execute(params.id, status);
+    return NextResponse.json(updatedTask);
   } catch (error) {
-    console.error('Error updating task:', error);
+    console.error('Error updating task status:', error);
     return NextResponse.json(
-      { error: 'Failed to update task' },
+      { error: 'Failed to update task status' },
       { status: 500 }
     );
   }
@@ -111,11 +80,11 @@ export async function PATCH(
 function getEventType(status: string): string {
   switch (status) {
     case 'in-progress':
-      return 'STARTED';
+      return 'START';
     case 'completed':
-      return 'COMPLETED';
+      return 'COMPLETE';
     case 'pending':
-      return 'PAUSED';
+      return 'PAUSE';
     default:
       return 'UPDATED';
   }

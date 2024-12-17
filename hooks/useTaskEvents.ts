@@ -4,7 +4,6 @@ export function useTaskEvents(taskId: string) {
   const [isLoading, setIsLoading] = useState(false);
 
   const recordEvent = async (eventType: string, description?: string) => {
-    setIsLoading(true);
     try {
       await fetch(`/api/tasks/${taskId}/events`, {
         method: 'POST',
@@ -18,8 +17,6 @@ export function useTaskEvents(taskId: string) {
       });
     } catch (error) {
       console.error('Failed to record event:', error);
-    } finally {
-      setIsLoading(false);
     }
   };
 

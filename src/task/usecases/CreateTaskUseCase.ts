@@ -22,7 +22,12 @@ export class CreateTaskUseCase {
       start_date: task.start_date,
       end_date: task.end_date,
       author: task.author,
-      status: task.status
+      status: task.status,
+      started_at: task.started_at,
+      completed_at: task.completed_at,
+      estimated_duration: task.estimated_duration,
+      actual_duration: task.actual_duration,
+      interruption_count: task.interruption_count
     })
   }
 

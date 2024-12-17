@@ -24,7 +24,7 @@ export async function GET(request: Request) {
         )
       ),
 
-      // 중단 분석
+      // 작업 중단 분석
       db.select({
         taskId: tasks.id,
         taskName: tasks.title,
@@ -33,16 +33,19 @@ export async function GET(request: Request) {
       .from(tasks)
       .where(
         and(
-          between(tasks.start_date, startDate, endDate)
+          between(tasks.start_date, startDate, endDate),
+          sql`interruption_count > 0`
         )
       )
-      .orderBy(tasks.interruption_count)
+      .orderBy(sql`interruption_count DESC`)
       .limit(5),
 
       // 작업 예측 (간단한 통계 기반)
       db.select({
         date: tasks.start_date,
-        count: sql<number>`count(*)`
+        taskCount: sql<number>`count(*)`,
+        completedCount: sql<number>`count(case when status = 'completed' then 1 end)`,
+        avgDuration: sql<number>`avg(actual_duration)`
       })
       .from(tasks)
       .groupBy(tasks.start_date)
@@ -55,18 +58,25 @@ export async function GET(request: Request) {
       : 0;
 
     // 이동 평균을 사용한 예측 계산
-    const movingAverage = 7;
-    const predictionsData = predictions.map((data, index, array) => {
-      if (index < movingAverage) return null;
-      const sum = array
-        .slice(index - movingAverage, index)
-        .reduce((acc, curr) => acc + Number(curr.count), 0);
-      
-      return {
-        date: data.date,
-        predicted: sum / movingAverage
-      };
-    }).filter(Boolean);
+    const calculateMovingAverage = (data: any[], window: number = 7) => {
+      return data.map((item, index, array) => {
+        if (index < window - 1) return null;
+        
+        const windowData = array.slice(index - window + 1, index + 1);
+        const sum = windowData.reduce((acc, curr) => ({
+          taskCount: acc.taskCount + curr.taskCount,
+          completedCount: acc.completedCount + curr.completedCount,
+          avgDuration: acc.avgDuration + (curr.avgDuration || 0)
+        }), { taskCount: 0, completedCount: 0, avgDuration: 0 });
+
+        return {
+          date: item.date,
+          predicted: sum.taskCount / window
+        };
+      }).filter(Boolean);
+    };
+
+    const predictionsData = calculateMovingAverage(predictions);
 
     return NextResponse.json({
       analytics: {

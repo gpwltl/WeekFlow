@@ -156,9 +156,21 @@ export function AnalyticsDashboard({ startDate, endDate }: AnalyticsDashboardPro
                 <Legend />
                 <Line
                   type="monotone"
-                  dataKey="predicted"
+                  dataKey="predicted.tasks"
                   stroke="#82ca9d"
-                  name="예측된 작업량"
+                  name="예측 작업량"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="predicted.completion"
+                  stroke="#8884d8"
+                  name="예측 완료율"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="predicted.duration"
+                  stroke="#ffc658"
+                  name="예측 소요시간"
                 />
               </LineChart>
             </ResponsiveContainer>
