@@ -5,7 +5,7 @@ export interface TaskAnalytics {
   averageDuration: number;
   totalInterruptions: number;
   mostInterruptedTasks: Array<{
-    taskId: number;
+    taskId: string;
     taskName: string;
     interruptions: number;
   }>;
@@ -17,4 +17,9 @@ export interface TaskEvent {
   eventType: 'START' | 'PAUSE' | 'RESUME' | 'COMPLETE';
   createdAt: Date;
   description?: string;
+}
+
+export interface TaskPrediction {
+  date: string;
+  predicted: number;
 } 

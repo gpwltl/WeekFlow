@@ -38,4 +38,25 @@ export async function POST(
       { status: 500 }
     );
   }
+}
+
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const events = await db
+      .select()
+      .from(taskEvents)
+      .where(eq(taskEvents.task_id, params.id))
+      .orderBy(taskEvents.created_at);
+
+    return NextResponse.json(events);
+  } catch (error) {
+    console.error('Error fetching task events:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch task events' },
+      { status: 500 }
+    );
+  }
 } 
