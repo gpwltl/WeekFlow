@@ -1,5 +1,5 @@
-import { Task } from "../entities/Task";
-import { TaskReader } from "../repositories/TaskReader";
+import { Task } from "../../domain/entities/Task";
+import { TaskReader } from "../../repositories/TaskReader";
 export class GetWeeklyTasksUseCase {
   constructor(private taskReader: TaskReader) {}
 

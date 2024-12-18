@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { TaskAnalyticsReader } from '../repositories/TaskAnalyticsReader';
-import { TaskAnalytics } from '../entities/TaskAnalytics';
+import { TaskAnalyticsReader } from '../../repositories/TaskAnalyticsReader';
+import { TaskAnalytics } from '../../domain/entities/TaskAnalytics';
 
 interface DateRange {
   startDate: Date;

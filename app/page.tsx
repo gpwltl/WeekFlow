@@ -5,7 +5,7 @@ import { WeeklyTimeline } from '@/components/weekly-timeline'
 import { TaskForm } from '@/components/task-form'
 import { DatePicker } from '@/components/ui/date-picker'
 import { getWeekDates, formatDateRange } from '@/shared/lib/utils'
-import { Task, TaskData } from '@/src/task/entities/Task'
+import { Task, TaskData } from '@/src/task/domain/entities/Task'
 
 export default function WeeklyTimelinePage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())

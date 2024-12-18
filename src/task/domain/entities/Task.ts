@@ -1,4 +1,4 @@
-import { TaskValidationError } from '../errors/TaskErrors'
+import { TaskValidationError } from '../../errors/TaskErrors';
 
 export type TaskStatus = 'pending' | 'in-progress' | 'completed'
 

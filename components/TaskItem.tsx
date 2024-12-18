@@ -1,4 +1,4 @@
-import { Task } from '@/src/task/entities/Task';
+import { Task } from '@/src/task/domain/entities/Task';
 import { useTaskEvents } from '../hooks/useTaskEvents';
 import { TaskEventList } from './TaskEventList';
 import { useState } from 'react';

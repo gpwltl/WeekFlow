@@ -1,4 +1,4 @@
-import { Task, TaskData } from "../entities/Task"
+import { Task, TaskData } from "../domain/entities/Task"
 
 export interface TaskWriter {
   create(task: TaskData): Promise<Task>

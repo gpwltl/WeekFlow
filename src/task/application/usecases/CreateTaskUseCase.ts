@@ -1,6 +1,6 @@
-import { Task, TaskData } from '../entities/Task'
-import { TaskWriter } from '../repositories/TaskWriter'
-import { TaskValidationError } from '../errors/TaskErrors'
+import { Task, TaskData } from '../../domain/entities/Task'
+import { TaskWriter } from '../../repositories/TaskWriter'
+import { TaskValidationError } from '../../errors/TaskErrors'
 
 export class CreateTaskUseCase {
   constructor(private taskWriter: TaskWriter) {}

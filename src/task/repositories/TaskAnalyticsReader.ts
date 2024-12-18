@@ -1,4 +1,4 @@
-import { TaskAnalytics } from '../entities/TaskAnalytics';
+import { TaskAnalytics } from '../domain/entities/TaskAnalytics';
 
 export interface TaskAnalyticsReader {
   getCompletionRate(startDate: Date, endDate: Date): Promise<number>;

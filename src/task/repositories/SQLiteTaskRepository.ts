@@ -1,7 +1,7 @@
 import { eq, and, gte, lte, sql } from 'drizzle-orm'
 import { TaskReader } from './TaskReader'
 import { TaskWriter } from './TaskWriter'
-import { Task, TaskData, TaskStatus } from '../entities/Task'
+import { Task, TaskData, TaskStatus } from '../domain/entities/Task'
 import { randomUUID } from 'crypto'
 import { tasks, taskEvents } from '@/shared/db/schema'
 import { db } from '@/shared/db'

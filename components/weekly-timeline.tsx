@@ -1,6 +1,6 @@
 "use client"
 
-import { Task } from '@/src/task/entities/Task'
+import { Task } from '@/src/task/domain/entities/Task'
 import { format, isSameDay } from 'date-fns'
 import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"

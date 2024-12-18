@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SQLiteTaskRepository } from '@/src/task/repositories/SQLiteTaskRepository'
 import { TaskValidationError, TaskNotFoundError } from '@/src/task/errors/TaskErrors'
-import { UpdateTaskStatusUseCase } from '@/src/task/usecases/UpdateTaskStatusUseCase'
+import { UpdateTaskStatusUseCase } from '@/src/task/application/usecases/UpdateTaskStatusUseCase'
 import { SQLiteTaskEventPublisher } from '@/src/task/infrastructure/SQLiteTaskEventPublisher';
 
 const taskRepository = new SQLiteTaskRepository()

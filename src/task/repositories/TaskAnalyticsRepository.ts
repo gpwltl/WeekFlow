@@ -3,7 +3,7 @@ import { TaskAnalyticsReader } from './TaskAnalyticsReader';
 import { db } from '@/shared/db';
 import { tasks, taskEvents } from '@/shared/db/schema';
 import { eq, and, between, count, sql } from 'drizzle-orm';
-import { TaskAnalytics } from '../entities/TaskAnalytics';
+import { TaskAnalytics } from '../domain/entities/TaskAnalytics';
 
 @Injectable()
 export class TaskAnalyticsRepository implements TaskAnalyticsReader {

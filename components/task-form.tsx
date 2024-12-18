@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { TaskData } from '@/src/task/entities/Task'
+import { TaskData } from '@/src/task/domain/entities/Task'
 
 interface TaskFormProps {
   mode?: 'create' | 'edit'

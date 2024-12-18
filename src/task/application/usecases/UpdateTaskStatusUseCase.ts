@@ -1,9 +1,9 @@
-import { Task, TaskStatus } from "../entities/Task";
-import { TaskNotFoundError } from "../errors/TaskErrors";
-import { TaskEventPublisher } from "../repositories/TaskEventPublisher";
-import { TaskReader } from "../repositories/TaskReader";
-import { TaskWriter } from "../repositories/TaskWriter";
-import { SQLiteTaskRepository } from "../repositories/SQLiteTaskRepository";
+import { Task, TaskStatus } from "../../domain/entities/Task";
+import { TaskNotFoundError } from "../../errors/TaskErrors";
+import { TaskReader } from "../../repositories/TaskReader";
+import { TaskWriter } from "../../repositories/TaskWriter";
+import { SQLiteTaskRepository } from "../../repositories/SQLiteTaskRepository";
+import { TaskEventPublisher } from "../../infrastructure/events/TaskEventPublisher";
 
 export class UpdateTaskStatusUseCase {
   constructor(
@@ -29,8 +29,7 @@ export class UpdateTaskStatusUseCase {
     await this.taskEventPublisher.publish({
       type: 'TASK_STATUS_UPDATED',
       taskId,
-      oldStatus: task.status,
-      newStatus
+      description: `Task status updated from ${task.status} to ${newStatus}`
     });
     
     return updatedTask;
