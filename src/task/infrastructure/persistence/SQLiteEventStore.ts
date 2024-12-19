@@ -1,12 +1,14 @@
-import { Injectable } from '@nestjs/common';
 import { IEventStore } from '../../application/ports/IEventStore';
 import { DomainEvent } from '../../domain/events/DomainEvent';
 import { Result } from '@/shared/core/Result';
 import { db } from '@/shared/db';
 import { taskEvents } from '@/shared/db/schema';
 import { eq } from 'drizzle-orm';
+import { Database } from 'sqlite3';
 
 export class SQLiteEventStore implements IEventStore {
+  constructor(private db: Database) {}
+
   async save(event: DomainEvent): Promise<Result<void>> {
     try {
       await db.insert(taskEvents).values({
@@ -60,5 +62,23 @@ export class SQLiteEventStore implements IEventStore {
       occurredOn: new Date(eventData.occurredOn),
       version: eventData.version
     };
+  }
+
+  async saveEvents(events: DomainEvent[]): Promise<void> {
+    const stmt = this.db.prepare(`
+      INSERT INTO task_events (
+        event_type,
+        event_data,
+        aggregate_id,
+        created_at
+      ) VALUES (?, ?, ?, ?)
+    `);
+
+    try {
+      stmt.run(events);
+    } catch (error) {
+      console.error('Failed to save events:', error);
+      throw error;
+    }
   }
 } 

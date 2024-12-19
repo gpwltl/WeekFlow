@@ -5,9 +5,16 @@ import { tasks, taskEvents } from '@/shared/db/schema'
 import { db } from '@/shared/db'
 import { TaskNotFoundError } from '../errors/TaskErrors'
 import { TaskReader } from '../application/ports/TaskReader'
-import { TaskWriter } from '../application/ports/TaskWriter'
+import { TaskWriter } from '../application/ports/TaskWriter'  
+import { SQLiteEventStore } from '../infrastructure/persistence/SQLiteEventStore'
+import { EventPublisher } from '../infrastructure/events/EventPublisher'
 
 export class SQLiteTaskRepository implements TaskReader, TaskWriter {
+  constructor(
+    private eventStore: SQLiteEventStore,
+    private eventPublisher: EventPublisher
+  ) {}
+
   async findById(id: string): Promise<Task | null> {
     const dbTask = await db.select().from(tasks).where(eq(tasks.id, id)).then(rows => rows[0])
     if (!dbTask) return null
@@ -99,43 +106,16 @@ export class SQLiteTaskRepository implements TaskReader, TaskWriter {
   }
 
   async update(id: string, taskData: Partial<TaskData>): Promise<Task> {
-    const currentTask = await this.findById(id);
-    if (!currentTask) throw new TaskNotFoundError(id);
-
-    let updates: Partial<TaskData> = { ...taskData };
-
-    // 상태에 따른 필드 업데이트
-    if (updates.status === 'in-progress') {
-      updates = {
-        ...updates,
-        started_at: new Date().toISOString(),
-        completed_at: null,
-        estimated_duration: 3600,
-        actual_duration: null
-      };
-    } else if (updates.status === 'completed' && currentTask.started_at) {
-      const startTime = new Date(currentTask.started_at);
-      const now = new Date();
-      updates = {
-        ...updates,
-        completed_at: now.toISOString(),
-        actual_duration: Math.floor((now.getTime() - startTime.getTime()) / 1000)
-      };
-    } else if (updates.status === 'pending') {
-      updates = {
-        ...updates,
-        started_at: null,
-        completed_at: null,
-        estimated_duration: null,
-        actual_duration: null
-      };
+    // 현재 태스크 확인
+    const existingTask = await this.findById(id);
+    if (!existingTask) {
+        throw new TaskNotFoundError(`Task with id ${id} not found`);
     }
 
-    // DB 업데이트
-    await db
-      .update(tasks)
-      .set(updates)
-      .where(eq(tasks.id, id));
+    // Drizzle update 쿼리 실행
+    await db.update(tasks)
+        .set(taskData)
+        .where(eq(tasks.id, id));
 
     return await this.findById(id) as Task;
   }
@@ -208,4 +188,5 @@ export class SQLiteTaskRepository implements TaskReader, TaskWriter {
     // 유사 작업이 없으면 기본값 (1시간)
     return 3600;
   }
+
 } 

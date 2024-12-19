@@ -1,7 +1,15 @@
-import { createClient } from '@libsql/client'
-import { drizzle } from 'drizzle-orm/libsql';
-import * as schema from '@/shared/db/schema';
+import { Database } from 'sqlite3';
+import { open } from 'sqlite';
 
-const client = createClient({
-  url: 'file:./sqlite.db',  // 로컬 파일 경로
-});
+// db 연결을 관리하는 함수
+let dbInstance: any = null;
+
+export async function getDb() {
+    if (!dbInstance) {
+        dbInstance = await open({
+            filename: './database.sqlite',
+            driver: Database
+        });
+    }
+    return dbInstance;
+}

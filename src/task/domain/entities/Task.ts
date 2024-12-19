@@ -1,4 +1,5 @@
 import { TaskValidationError } from '../../errors/TaskErrors';
+import { DomainEvent } from '../events/DomainEvent';
 
 export type TaskStatus = 'pending' | 'in-progress' | 'completed'
 
@@ -29,6 +30,7 @@ export class Task {
   estimated_duration?: number | null
   actual_duration?: number | null
   interruption_count: number
+  //private domainEvents: DomainEvent[] = [];
 
   private constructor(data: TaskData & { id: string }) {
     this.id = data.id
@@ -147,4 +149,16 @@ export class Task {
       estimated_duration: duration
     });
   }
+
+//   // 도메인 이벤트 추가
+//   protected addDomainEvent(event: DomainEvent): void {
+//     this.domainEvents.push(event);
+//   }
+
+//   // 도메인 이벤트 조회 및 초기화
+//   public getDomainEvents(): DomainEvent[] {
+//     const events = [...this.domainEvents];
+//     this.domainEvents = [];
+//     return events;
+//   }
 } 
