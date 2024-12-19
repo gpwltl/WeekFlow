@@ -124,7 +124,7 @@ export const WeeklyTimeline: React.FC<WeeklyTimelineProps> = ({
   const handleStatusChange = async (taskId: string, newStatus: Task['status']) => {
     try {
       const response = await fetch(`/api/tasks/${taskId}`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -135,14 +135,21 @@ export const WeeklyTimeline: React.FC<WeeklyTimelineProps> = ({
         throw new Error('Failed to update status')
       }
 
-      // 목록 새로고침
+      // 상태 업데이트 후 전체 목록 새로고침
       const startDate = weekDates[0].toISOString()
       const endDate = weekDates[weekDates.length - 1].toISOString()
       const tasksResponse = await fetch(
-        `/api/tasks?startDate=${startDate}&endDate=${endDate}`
+        `/api/tasks?startDate=${startDate}&endDate=${endDate}`,
+        { cache: 'no-store' }
       )
+      
+      if (!tasksResponse.ok) {
+        throw new Error('Failed to fetch updated tasks')
+      }
+      
       const updatedTasks = await tasksResponse.json()
       onTasksUpdate?.(updatedTasks)
+      
     } catch (error) {
       console.error('Error updating status:', error)
       alert('상태 변경에 실패했습니다.')

@@ -71,7 +71,7 @@ export async function DELETE(
   } catch (error) {
     if (error instanceof TaskNotFoundError) {
       return NextResponse.json(
-        { error: '해당 태스크를 찾을 �� 없습니다.' },
+        { error: '해당 태스크를 찾을 수 없습니다.' },
         { status: 404 }
       )
     }
@@ -83,25 +83,26 @@ export async function DELETE(
   }
 }
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
-    const { status } = await request.json();
+    const taskId = params.id
+    const { status } = await request.json()
+
+    const taskRepository = await createTaskRepository()
+    const updateTaskStatusUseCase = new UpdateTaskStatusUseCase(taskRepository)
     
-    const taskRepository = await createTaskRepository();
+    await updateTaskStatusUseCase.execute(taskId, status)
 
-    const useCase = new UpdateTaskStatusUseCase(
-      taskRepository,
-      new EventBus(new SQLiteEventStore(await getDb()))
-    );
-
-    const updatedTask = await useCase.execute(params.id, status);
-    return NextResponse.json(updatedTask);
+    return NextResponse.json({ success: true }, { status: 200 })
   } catch (error) {
-    console.error('Error updating task status:', error);
+    console.error('Error updating task status:', error)
     return NextResponse.json(
       { error: 'Failed to update task status' },
       { status: 500 }
-    );
+    )
   }
 }
 

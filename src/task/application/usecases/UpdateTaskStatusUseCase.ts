@@ -1,46 +1,20 @@
-import { Task, TaskStatus } from "../../domain/entities/Task";
-import { Result } from '@/shared/core/Result';
-import { TaskStatusChangedEvent, TaskCompletedEvent } from '../../domain/events/TaskEvents';
-import { IEventBus } from '../ports/IEventBus';
-import { SQLiteTaskRepository } from '../../repositories/SQLiteTaskRepository';
+import { Task } from '../../domain/entities/Task'
+import { SQLiteTaskRepository } from '../../repositories/SQLiteTaskRepository'
 
 export class UpdateTaskStatusUseCase {
-  constructor(
-    private taskRepository: SQLiteTaskRepository,
-    private eventBus: IEventBus
-  ) {}
+  constructor(private taskRepository: SQLiteTaskRepository) {}
 
-  async execute(taskId: string, newStatus: TaskStatus): Promise<Result<Task>> {
-    const task = await this.taskRepository.findById(taskId);
+  async execute(taskId: string, newStatus: Task['status']): Promise<void> {
+    // 1. 기존 태스크 조회
+    const task = await this.taskRepository.findById(taskId)
     if (!task) {
-      return Result.fail(`Task not found: ${taskId}`);
+      throw new Error('Task not found')
     }
 
-    const oldStatus = task.status;
-    const updatedTask = task.updateStatus(newStatus);
+    // 2. 상태 업데이트
+    task.status = newStatus
 
-    const statusChangedResult = await this.eventBus.publish(
-      new TaskStatusChangedEvent(taskId, oldStatus, newStatus)
-    );
-
-    if (!statusChangedResult.isSuccess) {
-      return Result.fail(statusChangedResult.error || 'Unknown error');
-    }
-
-    if (newStatus === 'completed') {
-      const completedResult = await this.eventBus.publish(
-        new TaskCompletedEvent(
-          taskId,
-          new Date(),
-          updatedTask.actual_duration || 0
-        )
-      );
-
-      if (!completedResult.isSuccess) {
-        return Result.fail(completedResult.error || 'Unknown error');
-      }
-    }
-
-    return Result.ok(updatedTask);
+    // 3. 저장
+    await this.taskRepository.update(taskId, task)
   }
 }
