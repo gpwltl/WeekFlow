@@ -1,4 +1,4 @@
-import { Task } from "../domain/entities/Task";
+import { Task } from "../../domain/entities/Task";
 
 export interface TaskReader {
   findById(id: string): Promise<Task | null>;

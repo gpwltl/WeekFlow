@@ -1,37 +1,46 @@
 import { Task, TaskStatus } from "../../domain/entities/Task";
-import { TaskNotFoundError } from "../../errors/TaskErrors";
-import { TaskReader } from "../../repositories/TaskReader";
-import { TaskWriter } from "../../repositories/TaskWriter";
-import { SQLiteTaskRepository } from "../../repositories/SQLiteTaskRepository";
-import { TaskEventPublisher } from "../../infrastructure/events/TaskEventPublisher";
+import { Result } from '@/shared/core/Result';
+import { TaskStatusChangedEvent, TaskCompletedEvent } from '../../domain/events/TaskEvents';
+import { IEventBus } from '../ports/IEventBus';
+import { SQLiteTaskRepository } from '../../repositories/SQLiteTaskRepository';
 
 export class UpdateTaskStatusUseCase {
   constructor(
-    private taskReader: TaskReader, 
-    private taskWriter: TaskWriter,
-    private taskEventPublisher: TaskEventPublisher
+    private taskRepository: SQLiteTaskRepository,
+    private eventBus: IEventBus
   ) {}
 
-  async execute(taskId: string, newStatus: TaskStatus): Promise<Task> {
-    const task = await this.taskReader.findById(taskId);
-    if (!task) throw new TaskNotFoundError(taskId);
-
-    let updatedTask = task.updateStatus(newStatus);
-    
-    if (newStatus === 'in-progress') {
-      const estimatedDuration = await (this.taskWriter as SQLiteTaskRepository)
-        .calculateEstimatedDuration(task.title);
-      updatedTask = updatedTask.setEstimatedDuration(estimatedDuration);
+  async execute(taskId: string, newStatus: TaskStatus): Promise<Result<Task>> {
+    const task = await this.taskRepository.findById(taskId);
+    if (!task) {
+      return Result.fail(`Task not found: ${taskId}`);
     }
-    
-    await this.taskWriter.update(taskId, updatedTask);
-    
-    await this.taskEventPublisher.publish({
-      type: 'TASK_STATUS_UPDATED',
-      taskId,
-      description: `Task status updated from ${task.status} to ${newStatus}`
-    });
-    
-    return updatedTask;
+
+    const oldStatus = task.status;
+    const updatedTask = task.updateStatus(newStatus);
+
+    const statusChangedResult = await this.eventBus.publish(
+      new TaskStatusChangedEvent(taskId, oldStatus, newStatus)
+    );
+
+    if (!statusChangedResult.isSuccess) {
+      return Result.fail(statusChangedResult.error || 'Unknown error');
+    }
+
+    if (newStatus === 'completed') {
+      const completedResult = await this.eventBus.publish(
+        new TaskCompletedEvent(
+          taskId,
+          new Date(),
+          updatedTask.actual_duration || 0
+        )
+      );
+
+      if (!completedResult.isSuccess) {
+        return Result.fail(completedResult.error || 'Unknown error');
+      }
+    }
+
+    return Result.ok(updatedTask);
   }
 }

@@ -1,11 +1,11 @@
 import { eq, and, gte, lte, sql } from 'drizzle-orm'
-import { TaskReader } from './TaskReader'
-import { TaskWriter } from './TaskWriter'
 import { Task, TaskData, TaskStatus } from '../domain/entities/Task'
 import { randomUUID } from 'crypto'
 import { tasks, taskEvents } from '@/shared/db/schema'
 import { db } from '@/shared/db'
 import { TaskNotFoundError } from '../errors/TaskErrors'
+import { TaskReader } from '../application/ports/TaskReader'
+import { TaskWriter } from '../application/ports/TaskWriter'
 
 export class SQLiteTaskRepository implements TaskReader, TaskWriter {
   async findById(id: string): Promise<Task | null> {
@@ -154,7 +154,30 @@ export class SQLiteTaskRepository implements TaskReader, TaskWriter {
   }
 
   async delete(id: string): Promise<void> {
-    await db.delete(tasks).where(eq(tasks.id, id))
+    try {
+      // 트랜잭션 시작
+      await db.transaction(async (tx) => {
+        // 1. 먼저 관련된 이벤트들을 삭제
+        await tx
+          .delete(taskEvents)
+          .where(eq(taskEvents.task_id, id));
+
+        // 2. 태스크 삭제
+        const result = await tx
+          .delete(tasks)
+          .where(eq(tasks.id, id));
+
+        // 3. 태스크가 존재하지 않는 경우 에러 발생
+        if (!result) {
+          throw new TaskNotFoundError(id);
+        }
+      });
+    } catch (error) {
+      if (error instanceof TaskNotFoundError) {
+        throw error;
+      }
+      throw new Error(`Failed to delete task: ${error}`);
+    }
   }
 
   async calculateEstimatedDuration(taskTitle: string): Promise<number> {

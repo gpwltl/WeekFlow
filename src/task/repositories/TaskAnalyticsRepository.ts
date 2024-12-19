@@ -29,7 +29,7 @@ export class TaskAnalyticsRepository implements TaskAnalyticsReader {
   async getAverageDuration(startDate: Date, endDate: Date): Promise<number> {
     const result = await db
       .select({
-        avgDuration: sql<number>`avg(${tasks.actualDuration})`
+        avgDuration: sql<number>`avg(${tasks.actual_duration})`
       })
       .from(tasks)
       .where(
@@ -48,7 +48,7 @@ export class TaskAnalyticsRepository implements TaskAnalyticsReader {
       .select({
         taskId: tasks.id,
         taskName: tasks.title,
-        interruptions: tasks.interruptionCount,
+        interruptions: tasks.interruption_count,
       })
       .from(tasks)
       .where(
@@ -56,14 +56,14 @@ export class TaskAnalyticsRepository implements TaskAnalyticsReader {
           between(tasks.start_date, startDate.toISOString(), endDate.toISOString())
         )
       )
-      .orderBy(tasks.interruptionCount)
+      .orderBy(tasks.interruption_count)
       .limit(5);
 
     const totalStats = await db
       .select({
         totalTasks: sql<number>`count(*)`,
         completedTasks: sql<number>`count(case when ${tasks.status} = 'completed' then 1 end)`,
-        totalInterruptions: sql<number>`sum(${tasks.interruptionCount})`
+        totalInterruptions: sql<number>`sum(${tasks.interruption_count})`
       })
       .from(tasks)
       .where(
@@ -79,7 +79,7 @@ export class TaskAnalyticsRepository implements TaskAnalyticsReader {
       averageDuration: await this.getAverageDuration(startDate, endDate),
       totalInterruptions: stats.totalInterruptions || 0,
       mostInterruptedTasks: interruptionsQuery.map(task => ({
-        taskId: task.taskId as unknown as number,
+        taskId: task.taskId.toString(),
         taskName: task.taskName as unknown as string,
         interruptions: task.interruptions || 0
       }))

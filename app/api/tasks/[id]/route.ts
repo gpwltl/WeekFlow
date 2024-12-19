@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { SQLiteTaskRepository } from '@/src/task/repositories/SQLiteTaskRepository'
 import { TaskValidationError, TaskNotFoundError } from '@/src/task/errors/TaskErrors'
 import { UpdateTaskStatusUseCase } from '@/src/task/application/usecases/UpdateTaskStatusUseCase'
-import { SQLiteTaskEventPublisher } from '@/src/task/infrastructure/SQLiteTaskEventPublisher';
+import { EventBus } from '@/src/task/infrastructure/events/EventBus';
+import { SQLiteEventStore } from '@/src/task/infrastructure/persistence/SQLiteEventStore';
 
 const taskRepository = new SQLiteTaskRepository()
 
@@ -30,7 +31,7 @@ export async function PUT(
     }
     console.error('Error updating task:', error)
     return NextResponse.json(
-      { error: '태스크 수정에 실했습니다.' },
+      { error: '태스크 수정에 실패했습니다.' },
       { status: 500 }
     )
   }
@@ -44,6 +45,12 @@ export async function DELETE(
     await taskRepository.delete(params.id)
     return NextResponse.json({ success: true })
   } catch (error) {
+    if (error instanceof TaskNotFoundError) {
+      return NextResponse.json(
+        { error: '해당 태스크를 찾을 수 없습니다.' },
+        { status: 404 }
+      )
+    }
     console.error('Error deleting task:', error)
     return NextResponse.json(
       { error: '태스크 삭제에 실패했습니다.' },
@@ -56,15 +63,15 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   try {
     const { status } = await request.json();
     
+    const eventStore = new SQLiteEventStore();
+    const eventBus = new EventBus(eventStore);
     const repository = new SQLiteTaskRepository();
-    const eventPublisher = new SQLiteTaskEventPublisher();
-    
+
     const useCase = new UpdateTaskStatusUseCase(
-      repository, 
       repository,
-      eventPublisher
+      eventBus
     );
-    
+
     const updatedTask = await useCase.execute(params.id, status);
     return NextResponse.json(updatedTask);
   } catch (error) {
