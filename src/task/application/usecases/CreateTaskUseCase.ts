@@ -1,14 +1,13 @@
 import { Task, TaskData } from '../../domain/entities/Task'
-import { Injectable } from '@nestjs/common'
 import { IEventPublisher } from '../ports/IEventPublisher'
 import { Result } from '@/shared/core/Result'
 import { randomUUID } from 'crypto';
 import { TaskCreatedEvent } from '../../domain/events/TaskEvents'
-import { SQLiteTaskRepository } from '../../repositories/SQLiteTaskRepository'
+import { TaskWriteRepository } from '../../infrastructure/persistence/TaskWriteRepository'
 
 export class CreateTaskUseCase {
   constructor(
-    private taskRepository: SQLiteTaskRepository,
+    private taskRepository: TaskWriteRepository,
     private eventPublisher: IEventPublisher
   ) {}
 
@@ -23,13 +22,10 @@ export class CreateTaskUseCase {
     
     // 이벤트 발행
     await this.eventPublisher.publish(
-      new TaskCreatedEvent(task.id, {
-        title: task.title,
-        content: task.content,
-        startDate: task.start_date,
-        endDate: task.end_date,
-        author: task.author
-      })
+      new TaskCreatedEvent(task.id,
+      'Task created',
+      new Date()
+      )
     )
 
     return Result.ok(task)

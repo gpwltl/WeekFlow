@@ -15,7 +15,7 @@ export class EventBus implements IEventBus {
       await this.eventStore.save(event);
 
       // 등록된 핸들러들 실행
-      const handlers = this.handlers.get(event.type) || [];
+      const handlers = this.handlers.get(event.eventType) || [];
       await Promise.all(handlers.map(handler => handler(event)));
 
       return Result.ok();

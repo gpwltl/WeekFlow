@@ -1,5 +1,4 @@
 import { TaskValidationError } from '../../errors/TaskErrors';
-import { DomainEvent } from '../events/DomainEvent';
 
 export type TaskStatus = 'pending' | 'in-progress' | 'completed'
 
@@ -17,20 +16,30 @@ export interface TaskData {
   interruption_count?: number
 }
 
-export class Task {
+export interface Task {
   id: string
   title: string
   content: string
   start_date: string
   end_date: string
   author: string
-  status: TaskStatus
+  status: 'pending' | 'in-progress' | 'completed'
+}
+
+export class Task implements Task {
+  id: string
+  title: string
+  content: string
+  start_date: string
+  end_date: string
+  author: string
+  status: 'pending' | 'in-progress' | 'completed'
   started_at?: string | null
   completed_at?: string | null
   estimated_duration?: number | null
   actual_duration?: number | null
   interruption_count: number
-  //private domainEvents: DomainEvent[] = [];
+  private events: any[] = []  // 이벤트 저장소
 
   private constructor(data: TaskData & { id: string }) {
     this.id = data.id
@@ -79,7 +88,9 @@ export class Task {
       throw new TaskValidationError('작성자는 필수 입력값입니다')
     }
 
-    return new Task(data)
+    const task = new Task(data)
+    task.events.push({ type: 'TaskCreated', data })
+    return task
   }
 
   /**
@@ -150,15 +161,9 @@ export class Task {
     });
   }
 
-//   // 도메인 이벤트 추가
-//   protected addDomainEvent(event: DomainEvent): void {
-//     this.domainEvents.push(event);
-//   }
-
-//   // 도메인 이벤트 조회 및 초기화
-//   public getDomainEvents(): DomainEvent[] {
-//     const events = [...this.domainEvents];
-//     this.domainEvents = [];
-//     return events;
-//   }
+  clearEvents() {
+    const events = [...this.events]
+    this.events = []
+    return events
+  }
 } 

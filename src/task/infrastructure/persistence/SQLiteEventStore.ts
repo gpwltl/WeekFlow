@@ -4,22 +4,20 @@ import { Result } from '@/shared/core/Result';
 import { db } from '@/shared/db';
 import { taskEvents } from '@/shared/db/schema';
 import { eq } from 'drizzle-orm';
-import { Database } from 'sqlite3';
+import { LibSQLDatabase } from 'drizzle-orm/libsql';
 
 export class SQLiteEventStore implements IEventStore {
-  constructor(private db: Database) {}
+  constructor(private db: LibSQLDatabase) {}
 
   async save(event: DomainEvent): Promise<Result<void>> {
     try {
       await db.insert(taskEvents).values({
-        task_id: event.aggregateId,
-        event_type: event.type,
+        task_id: event.taskId,
+        event_type: event.eventType,
         description: JSON.stringify({
-          version: event.version,
-          occurredOn: event.occurredOn,
           data: event
         }),
-        created_at: event.occurredOn.toISOString()
+        created_at: event.createdAt.toISOString()
       });
       return Result.ok();
     } catch (error) {
@@ -64,21 +62,23 @@ export class SQLiteEventStore implements IEventStore {
     };
   }
 
-  async saveEvents(events: DomainEvent[]): Promise<void> {
-    const stmt = this.db.prepare(`
-      INSERT INTO task_events (
-        event_type,
-        event_data,
-        aggregate_id,
-        created_at
-      ) VALUES (?, ?, ?, ?)
-    `);
-
+  async saveEvents(events: any[]): Promise<void> {
     try {
-      stmt.run(events);
+      await db.insert(taskEvents).values(
+        events.map(event => ({
+          task_id: event.data.id,
+          event_type: event.type,
+          description: JSON.stringify(event.data.events.data),
+          created_at: new Date().toISOString()
+        }))
+      );
     } catch (error) {
       console.error('Failed to save events:', error);
       throw error;
     }
+  }
+
+  async getEvents(aggregateId: string): Promise<any[]> {
+    return [];
   }
 } 

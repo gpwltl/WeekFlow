@@ -1,44 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SQLiteTaskRepository } from '@/src/task/repositories/SQLiteTaskRepository'
 import { TaskValidationError, TaskNotFoundError } from '@/src/task/errors/TaskErrors'
-import { UpdateTaskStatusUseCase } from '@/src/task/application/usecases/UpdateTaskStatusUseCase'
-import { EventBus } from '@/src/task/infrastructure/events/EventBus';
-import { SQLiteEventStore } from '@/src/task/infrastructure/persistence/SQLiteEventStore';
-import { EventPublisher } from '@/src/task/infrastructure/events/EventPublisher';
-import { getDb } from '@/shared/db/config';
-
-// 팩토리 함수를 async로 변경
-async function createTaskRepository() {
-    const db = await getDb();
-    const eventStore = new SQLiteEventStore(db);
-    const eventBus = new EventBus(eventStore);
-    const eventPublisher = new EventPublisher(eventBus);
-    return new SQLiteTaskRepository(eventStore, eventPublisher);
-}
+import { TaskUseCases } from '@/src/task/infrastructure/factories/taskUseCases'
 
 export async function PUT(
   request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    // 요청 데이터 로깅
-    const rawData = await request.text();
-    console.log('Raw request data:', rawData);
+    const taskData = await request.json();
     
-    const taskData = rawData ? JSON.parse(rawData) : null;
-    console.log('Parsed taskData:', taskData);
+    const { updateTaskUseCase } = await TaskUseCases();
+    await updateTaskUseCase.execute(params.id, taskData);
     
-    if (!taskData || !taskData.title) {
-      return NextResponse.json(
-        { error: '올바른 태스크 데이터가 필요합니다.' },
-        { status: 400 }
-      )
-    }
-
-    const taskRepository = await createTaskRepository();
-    const updatedTask = await taskRepository.update(params.id, taskData)
+    return NextResponse.json({ success: true });
     
-    return NextResponse.json(updatedTask)
   } catch (error) {
     if (error instanceof TaskValidationError) {
       return NextResponse.json(
@@ -65,9 +40,9 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const taskRepository = await createTaskRepository();
-    await taskRepository.delete(params.id)
-    return NextResponse.json({ success: true })
+    const { deleteTaskUseCase } = await TaskUseCases();
+    await deleteTaskUseCase.execute(params.id);
+    return NextResponse.json({ success: true });
   } catch (error) {
     if (error instanceof TaskNotFoundError) {
       return NextResponse.json(
@@ -88,15 +63,10 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const taskId = params.id
-    const { status } = await request.json()
-
-    const taskRepository = await createTaskRepository()
-    const updateTaskStatusUseCase = new UpdateTaskStatusUseCase(taskRepository)
-    
-    await updateTaskStatusUseCase.execute(taskId, status)
-
-    return NextResponse.json({ success: true }, { status: 200 })
+    const { status } = await request.json();
+    const { updateTaskStatusUseCase } = await TaskUseCases();
+    await updateTaskStatusUseCase.execute(params.id, status);
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error updating task status:', error)
     return NextResponse.json(

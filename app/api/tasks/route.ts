@@ -1,26 +1,5 @@
-import { SQLiteTaskRepository } from '@/src/task/repositories/SQLiteTaskRepository';
-import { CreateTaskUseCase } from '@/src/task/application/usecases/CreateTaskUseCase';
-import { GetWeeklyTasksUseCase } from '@/src/task/application/usecases/GetWeeklyTasksUseCase';
 import { NextResponse } from 'next/server';
-import { SQLiteEventStore } from '@/src/task/infrastructure/persistence/SQLiteEventStore';
-import { EventBus } from '@/src/task/infrastructure/events/EventBus';
-import { EventPublisher } from '@/src/task/infrastructure/events/EventPublisher';
-import { getDb } from '@/shared/db/config';
-
-// 팩토리 함수로 의존성 생성 관리
-async function createUseCases() {
-    const db = await getDb();
-    const eventStore = new SQLiteEventStore(db);
-    const eventBus = new EventBus(eventStore);
-    const eventPublisher = new EventPublisher(eventBus);
-    const taskRepository = new SQLiteTaskRepository(eventStore, eventPublisher);
-    
-    return {
-        getWeeklyTasksUseCase: new GetWeeklyTasksUseCase(taskRepository),
-        createTaskUseCase: new CreateTaskUseCase(taskRepository, eventPublisher),
-        taskRepository
-    };
-}
+import { TaskUseCases } from '@/src/task/infrastructure/factories/taskUseCases';
 
 export async function GET(request: Request) {
     try {
@@ -28,7 +7,7 @@ export async function GET(request: Request) {
         const startDate = searchParams.get('startDate');
         const endDate = searchParams.get('endDate');
 
-        const { getWeeklyTasksUseCase, taskRepository } = await createUseCases();
+        const { getWeeklyTasksUseCase } = await TaskUseCases();
 
         let tasks;
         if (startDate && endDate) {
@@ -37,7 +16,7 @@ export async function GET(request: Request) {
                 new Date(endDate)
             );
         } else {
-            tasks = await taskRepository.findAll();
+            tasks = await getWeeklyTasksUseCase.execute(new Date(), new Date());
         }
 
         return NextResponse.json(tasks);
@@ -53,7 +32,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     try {
         const taskData = await request.json();
-        const { createTaskUseCase } = await createUseCases();
+        const { createTaskUseCase } = await TaskUseCases();
         const task = await createTaskUseCase.execute(taskData);
         return NextResponse.json(task);
     } catch (error) {

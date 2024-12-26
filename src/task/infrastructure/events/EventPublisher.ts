@@ -6,8 +6,11 @@ import { EventBus } from './EventBus';
 export class EventPublisher implements IEventPublisher {
   constructor(private eventBus: EventBus) {}
 
-  async publish(event: DomainEvent): Promise<Result<void>> {
-    return this.eventBus.publish(event);
+  async publish(event: DomainEvent): Promise<void> {
+    const result = await this.eventBus.publish(event);
+    if (!result.isSuccess) {
+      throw new Error(result.error || 'Unknown error');
+    }
   }
 
   async publishAll(events: DomainEvent[]): Promise<Result<void>> {
@@ -18,11 +21,14 @@ export class EventPublisher implements IEventPublisher {
 
     for (const event of events) {
       console.log(`Publishing event: ${event.constructor.name}`, event);
-      const result = await this.publish(event);
-      if (!result.isSuccess) {
-        return Result.fail(result.error || 'Unknown error');
-      }
+      await this.publish(event);
     }
     return Result.ok();
+  }
+
+  async publishEvents(events: any[]): Promise<void> {
+    for (const event of events) {
+      await this.publish(event);
+    }
   }
 } 
