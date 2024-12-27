@@ -23,7 +23,7 @@ export interface Task {
   start_date: string
   end_date: string
   author: string
-  status: 'pending' | 'in-progress' | 'completed'
+  status: TaskStatus
 }
 
 export class Task implements Task {
@@ -33,7 +33,7 @@ export class Task implements Task {
   start_date: string
   end_date: string
   author: string
-  status: 'pending' | 'in-progress' | 'completed'
+  status: TaskStatus
   started_at?: string | null
   completed_at?: string | null
   estimated_duration?: number | null
@@ -83,7 +83,7 @@ export class Task implements Task {
       throw new TaskValidationError('종료일은 시작일보다 이후여야 합니다')
     }
 
-    // 작성자 유효성 검사
+    // 작성자 유효성 ��사
     if (!data.author.trim()) {
       throw new TaskValidationError('작성자는 필수 입력값입니다')
     }
@@ -96,21 +96,24 @@ export class Task implements Task {
   /**
    * Task 업데이트를 위한 새로운 인스턴스 생성
    */
-  update(props: Partial<TaskData>): Task {
-    return Task.create({
-      id: this.id,
-      title: props.title ?? this.title,
-      content: props.content ?? this.content,
-      start_date: props.start_date ?? this.start_date,
-      end_date: props.end_date ?? this.end_date,
-      author: props.author ?? this.author,
-      status: props.status ?? this.status,
-      started_at: props.started_at ?? this.started_at,
-      completed_at: props.completed_at ?? this.completed_at,
-      estimated_duration: props.estimated_duration ?? this.estimated_duration,
-      actual_duration: props.actual_duration ?? this.actual_duration,
-      interruption_count: props.interruption_count ?? this.interruption_count
-    })
+  update(updateData: Partial<TaskData>): Task {
+    const updatedTask = new Task({
+      ...this,
+      ...updateData,
+      // 시간 관련 필드는 명시적으로 업데이트할 때만 변경
+      started_at: updateData.started_at ?? this.started_at,
+      completed_at: updateData.completed_at ?? this.completed_at,
+      estimated_duration: updateData.estimated_duration ?? this.estimated_duration,
+      actual_duration: updateData.actual_duration ?? this.actual_duration,
+      interruption_count: updateData.interruption_count ?? this.interruption_count
+    });
+
+    updatedTask.events.push({
+      type: 'TaskUpdated',
+      data: { id: this.id, ...updateData }
+    });
+
+    return updatedTask;
   }
 
   updateStatus(newStatus: TaskStatus): Task {
@@ -165,5 +168,22 @@ export class Task implements Task {
     const events = [...this.events]
     this.events = []
     return events
+  }
+
+  static from(data: any): Task {
+    return new Task({
+      id: data.id,
+      title: data.title,
+      content: data.content,
+      start_date: data.start_date,
+      end_date: data.end_date,
+      author: data.author,
+      status: data.status,
+      started_at: data.started_at,
+      completed_at: data.completed_at,
+      estimated_duration: data.estimated_duration,
+      actual_duration: data.actual_duration,
+      interruption_count: data.interruption_count
+    });
   }
 } 

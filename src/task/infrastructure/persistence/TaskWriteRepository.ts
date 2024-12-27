@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm'
-import { db, tasks } from '@/shared/db'
+import { db } from '@/shared/db'
+import { tasks } from '@/shared/db/schema'
 import { randomUUID } from 'crypto'
 import { TaskMapper } from './mappers/TaskMapper'
 import { TaskWriter } from '@/src/task/application/ports/TaskWriter'
@@ -26,9 +27,9 @@ export class TaskWriteRepository implements TaskWriter {
     return task
   }
 
-  async update(id: string, taskData: Partial<TaskData>): Promise<void> {
+  async update(id: string, updatedTask: Task): Promise<void> {
     await db.update(tasks)
-      .set(taskData)
+      .set(TaskMapper.toPersistence(updatedTask))
       .where(eq(tasks.id, id))
   }
 

@@ -1,3 +1,4 @@
+import { TaskData } from '../../domain/entities/Task';
 import { TaskUpdatedEvent } from '../../domain/events/TaskEvents';
 import { TaskReadRepository } from '../../infrastructure/persistence/TaskReadRepository';
 import { TaskWriteRepository } from '../../infrastructure/persistence/TaskWriteRepository';
@@ -5,23 +6,19 @@ import { IEventPublisher } from '../ports/IEventPublisher';
 
 export class UpdateTaskUseCase {
   constructor(
-        private taskReadRepository: TaskReadRepository,
-        private taskWriteRepository: TaskWriteRepository,
-        private eventPublisher: IEventPublisher
-    ) {}
+    private taskReadRepository: TaskReadRepository,
+    private taskWriteRepository: TaskWriteRepository,
+    private eventPublisher: IEventPublisher
+  ) {}
 
-  async execute(id: string, title: string): Promise<void> {
-    const task = await this.taskReadRepository.findById(id);
-    if (!task) {
-      throw new Error('Task not found');
+  async execute(id: string, updateData: Partial<TaskData>): Promise<void> {
+    const existingTask = await this.taskReadRepository.findById(id);
+    if (!existingTask) {
+      throw new Error(`Task not found with id: ${id}`);
     }
 
-    // 이벤트 발행
-    await this.eventPublisher.publish(
-      new TaskUpdatedEvent(task.id, 'Task updated', new Date())
-    )
-
-    task.title = title
-    await this.taskWriteRepository.update(id, task)
+    const updatedTask = existingTask.update(updateData);
+    await this.taskWriteRepository.update(id, updatedTask);
+    await this.eventPublisher.publish(new TaskUpdatedEvent(id, 'Task updated', new Date()));
   }
 } 

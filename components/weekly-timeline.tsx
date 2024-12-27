@@ -4,7 +4,6 @@ import { Task } from '@/src/task/domain/entities/Task'
 import { format, isSameDay } from 'date-fns'
 import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
-import { TaskForm } from './task-form'
 import {
   Popover,
   PopoverContent,
@@ -32,8 +31,8 @@ export const WeeklyTimeline: React.FC<WeeklyTimelineProps> = ({
   weekDates,
   onTasksUpdate,
   onEditTask,
-  onDeleteTask,
-  onStatusChange
+  onDeleteTask
+  
 }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -117,7 +116,19 @@ export const WeeklyTimeline: React.FC<WeeklyTimelineProps> = ({
 
   const handleDeleteClick = async (taskId: string) => {
     if (window.confirm('정말 삭제하시겠습니까?')) {
-      onDeleteTask?.(taskId)
+      try {
+        const response = await fetch(`/api/tasks/${taskId}`, {
+          method: 'DELETE',
+        })
+        if (!response.ok) {
+          throw new Error('Failed to delete task')
+        }
+        
+        await onDeleteTask?.(taskId)
+      } catch (error) {
+        console.error('Error deleting task:', error)
+        alert('일정 삭제에 실패했습니다.')
+      }
     }
   }
 

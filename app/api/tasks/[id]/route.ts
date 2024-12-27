@@ -3,18 +3,25 @@ import { TaskValidationError, TaskNotFoundError } from '@/src/task/errors/TaskEr
 import { TaskUseCases } from '@/src/task/infrastructure/factories/taskUseCases'
 
 export async function PUT(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     const taskData = await request.json();
     
+    if (!params.id) {
+      return NextResponse.json(
+        { error: 'Task ID is required' },
+        { status: 400 }
+      );
+    }
+
     const { updateTaskUseCase } = await TaskUseCases();
     await updateTaskUseCase.execute(params.id, taskData);
     
     return NextResponse.json({ success: true });
-    
   } catch (error) {
+    console.error('Error in PUT route:', error);
     if (error instanceof TaskValidationError) {
       return NextResponse.json(
         { error: error.message },
@@ -27,7 +34,6 @@ export async function PUT(
         { status: 404 }
       )
     }
-    console.error('Error updating task:', error)
     return NextResponse.json(
       { error: '태스크 수정에 실패했습니다.' },
       { status: 500 }

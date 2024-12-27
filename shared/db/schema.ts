@@ -19,8 +19,7 @@ export const tasks = sqliteTable('tasks', {
 export const taskEvents = sqliteTable('task_events', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   task_id: text('task_id')
-    .notNull()
-    .references(() => tasks.id),
+    .notNull(),
   event_type: text('event_type').notNull(),
   created_at: text('created_at').default(sql`CURRENT_TIMESTAMP`),
   description: text('description')

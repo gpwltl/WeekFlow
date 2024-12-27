@@ -47,46 +47,15 @@ export default function WeeklyTimelinePage() {
 
   // 태스크 수정 완료 처리
   const handleTaskUpdated = async (updatedTask: TaskData & { id: string }) => {
-    try {
-      const response = await fetch(`/api/tasks/${updatedTask.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedTask),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to update task')
-      }
-
-      // 목록 새로고침
-      fetchTasks()
-      // 수정 모드 해제
-      setEditingTask(null)
-    } catch (error) {
-      console.error('Error updating task:', error)
-      alert('일정 수정에 실패했습니다.')
-    }
+    fetchTasks()
+    setEditingTask(null)
   }
 
-  // 태스크 삭제 처리
+  // 태스크 삭제 후 처리
   const handleTaskDeleted = async (taskId: string) => {
-    try {
-      const response = await fetch(`/api/tasks/${taskId}`, {
-        method: 'DELETE',
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to delete task')
-      }
-
-      // 목록 새로고침
-      fetchTasks()
-    } catch (error) {
-      console.error('Error deleting task:', error)
-      alert('일정 삭제에 실패했습니다.')
-    }
+    // DELETE 요청은 WeeklyTimeline 컴포넌트에서 처리하고
+    // 여기서는 목록 새로고침만 수행
+    fetchTasks()
   }
 
   return (

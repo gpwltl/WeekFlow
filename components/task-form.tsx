@@ -65,9 +65,16 @@ export function TaskForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isSubmitting) return;  // 중복 제출 방지
+    
     if (title && content && startDate && endDate && author) {
       try {
         setIsSubmitting(true)
+        
+        // ID 존재 여부 확인
+        if (mode === 'edit' && !initialData?.id) {
+          throw new Error('Task ID is missing');
+        }
         
         const taskData: TaskData = {
           title,
@@ -118,7 +125,7 @@ export function TaskForm({
   // 취소 핸들러
   const handleCancel = () => {
     resetForm()  // 폼 초기화
-    onCancel?.()  // 부모 컴포넌트에 취소 알림
+    onCancel?.()  // 부모 컴포���트에 취소 알림
   }
 
   return (
