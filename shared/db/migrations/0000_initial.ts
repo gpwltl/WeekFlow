@@ -36,8 +36,7 @@ async function main() {
         task_id TEXT NOT NULL,
         event_type TEXT NOT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        description TEXT,
-        FOREIGN KEY (task_id) REFERENCES tasks(id)
+        description TEXT
       );
     `);
     
