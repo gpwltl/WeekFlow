@@ -26,7 +26,7 @@ export class EventPublisher implements IEventPublisher {
     return Result.ok();
   }
 
-  async publishEvents(events: any[]): Promise<void> {
+  async publishEvents(events: DomainEvent[]): Promise<void> {
     for (const event of events) {
       await this.publish(event);
     }

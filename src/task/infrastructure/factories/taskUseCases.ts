@@ -20,9 +20,9 @@ export async function TaskUseCases() {
 
   return {
     getWeeklyTasksUseCase: new GetWeeklyTasksUseCase(taskReadRepository),
-    createTaskUseCase: new CreateTaskUseCase(taskWriteRepository, eventPublisher),
-    updateTaskUseCase: new UpdateTaskUseCase(taskReadRepository, taskWriteRepository, eventPublisher),
-    deleteTaskUseCase: new DeleteTaskUseCase(taskReadRepository, taskWriteRepository, eventPublisher),
-    updateTaskStatusUseCase: new UpdateTaskStatusUseCase(taskReadRepository, taskWriteRepository, eventPublisher),
+    createTaskUseCase: new CreateTaskUseCase(taskWriteRepository),
+    updateTaskUseCase: new UpdateTaskUseCase(taskReadRepository, taskWriteRepository),
+    deleteTaskUseCase: new DeleteTaskUseCase(taskReadRepository, taskWriteRepository),
+    updateTaskStatusUseCase: new UpdateTaskStatusUseCase(taskReadRepository, taskWriteRepository),
   };
 } 

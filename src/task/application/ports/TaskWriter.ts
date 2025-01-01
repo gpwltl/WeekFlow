@@ -1,7 +1,8 @@
-import { Task, TaskData } from "../../domain/entities/Task";
+import { Task, TaskData, TaskStatus } from "../../domain/entities/Task";
 
 export interface TaskWriter {
   create(task: TaskData): Promise<Task>;
-  update(id: string, task: Partial<TaskData>): Promise<void>;
+  updateTask(id: string, task: Partial<TaskData>): Promise<void>;
+  updateStatus(id: string, newStatus: TaskStatus): Promise<void>;
   delete(id: string): Promise<void>;
 } 

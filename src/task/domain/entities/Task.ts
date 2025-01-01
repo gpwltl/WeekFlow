@@ -83,14 +83,12 @@ export class Task implements Task {
       throw new TaskValidationError('종료일은 시작일보다 이후여야 합니다')
     }
 
-    // 작성자 유효성 ��사
+    // 작성자 유효성 검사 
     if (!data.author.trim()) {
       throw new TaskValidationError('작성자는 필수 입력값입니다')
     }
 
-    const task = new Task(data)
-    task.events.push({ type: 'TaskCreated', data })
-    return task
+    return new Task(data)
   }
 
   /**

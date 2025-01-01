@@ -64,11 +64,12 @@ export class SQLiteEventStore implements IEventStore {
 
   async saveEvents(events: any[]): Promise<void> {
     try {
+      console.log('events', events)
       await db.insert(taskEvents).values(
         events.map(event => ({
-          task_id: event.data.id,
-          event_type: event.type,
-          description: JSON.stringify(event.data.events.data),
+          task_id: event.taskId,
+          event_type: event.eventType,
+          description: JSON.stringify(event),
           created_at: new Date().toISOString()
         }))
       );
