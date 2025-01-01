@@ -80,31 +80,6 @@ export class TaskWriteRepository implements TaskWriter {
 
     await this.eventStore.saveEvents([statusEvent]);
     await this.eventPublisher.publishEvents([statusEvent]);
-
-    // in-progress 또는 completed 상태일 때만 피드백 요청
-    if (newStatus === 'in-progress' || newStatus === 'completed') {
-      try {
-        const response = await fetch('/api/feedback', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            taskId: id,
-            taskName: existingTask.title,
-            status: newStatus,
-          }),
-        });
-
-        console.log(response);
-
-        if (!response.ok) {
-          console.error('Failed to generate feedback');
-        }
-      } catch (error) {
-        console.error('Error generating feedback:', error);
-      }
-    }
   }
 
   async delete(id: string): Promise<void> {
