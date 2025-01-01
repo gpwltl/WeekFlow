@@ -6,6 +6,7 @@ import { TaskForm } from '@/components/task-form'
 import { DatePicker } from '@/components/ui/date-picker'
 import { getWeekDates, formatDateRange } from '@/shared/lib/utils'
 import { Task, TaskData } from '@/src/task/domain/entities/Task'
+import Link from 'next/link'
 
 export default function WeeklyTimelinePage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
@@ -61,16 +62,26 @@ export default function WeeklyTimelinePage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8 pr-12">
       <div className="container mx-auto px-4">
-        <div className="mb-8 flex items-center justify-between">
-          <h1 className="text-3xl font-bold">주간 일정 타임라인</h1>
-          <div className="flex items-center space-x-4">
-            <span className="text-lg font-medium">
-              {formatDateRange(weekDates[0], weekDates[4])}
-            </span>
-            <DatePicker
-              date={selectedDate}
-              setDate={(date) => date && setSelectedDate(date)}
-            />
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-4">
+            <h1 className="text-2xl font-bold">주간 일정 타임라인</h1>
+            <Link 
+              href="/dashboard" 
+              className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+            >
+              대시보드
+            </Link>
+          </div>
+          <div className="date-selector">
+            <div className="flex items-center space-x-4">
+              <span className="text-lg font-medium">
+                {formatDateRange(weekDates[0], weekDates[4])}
+              </span>
+              <DatePicker
+                date={selectedDate}
+                setDate={(date) => date && setSelectedDate(date)}
+              />
+            </div>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-[40%_60%] gap-8">
