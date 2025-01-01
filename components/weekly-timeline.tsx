@@ -16,6 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Toast } from './ui/toast'
+import { useFeedback } from '@/hooks/useFeedback'
 
 interface WeeklyTimelineProps {
   tasks: Task[]
@@ -36,6 +38,8 @@ export const WeeklyTimeline: React.FC<WeeklyTimelineProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [feedback, setFeedback] = useState<{ message: string } | null>(null)
+  const { generateFeedback } = useFeedback()
 
   useEffect(() => {
     let isSubscribed = true
@@ -135,37 +139,32 @@ export const WeeklyTimeline: React.FC<WeeklyTimelineProps> = ({
   const handleStatusChange = async (taskId: string, newStatus: Task['status']) => {
     try {
       const response = await fetch(`/api/tasks/${taskId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: newStatus }),
-      })
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
 
-      if (!response.ok) {
-        throw new Error('Failed to update status')
+      if (!response.ok) throw new Error('Failed to update task status');
+
+      const task = tasks.find(t => t.id === taskId);
+
+      // 상태가 'in-progress' 또는 'completed'일 때만 피드백 생성
+      if (newStatus === 'in-progress' || newStatus === 'completed') {
+        const feedbackResponse = await generateFeedback(taskId, task?.title || '', newStatus);
+        setFeedback(feedbackResponse);
       }
 
-      // 상태 업데이트 후 전체 목록 새로고침
-      const startDate = weekDates[0].toISOString()
-      const endDate = weekDates[weekDates.length - 1].toISOString()
-      const tasksResponse = await fetch(
-        `/api/tasks?startDate=${startDate}&endDate=${endDate}`,
-        { cache: 'no-store' }
-      )
-      
-      if (!tasksResponse.ok) {
-        throw new Error('Failed to fetch updated tasks')
+      // 부모 컴포넌트에 업데이트 알림
+      if (onTasksUpdate) {
+        const updatedTasks = tasks.map(t => 
+          t.id === taskId ? { ...t, status: newStatus } : t
+        );
+        onTasksUpdate(updatedTasks as Task[]);
       }
-      
-      const updatedTasks = await tasksResponse.json()
-      onTasksUpdate?.(updatedTasks)
-      
     } catch (error) {
-      console.error('Error updating status:', error)
-      alert('상태 변경에 실패했습니다.')
+      console.error('Error updating task status:', error);
     }
-  }
+  };
 
   return (
     <div className="p-6 pr-12">
@@ -304,6 +303,15 @@ export const WeeklyTimeline: React.FC<WeeklyTimelineProps> = ({
           </div>
         </div>
       </div>
+
+      {/* 토스트 메시지 */}
+      {feedback && (
+        <Toast
+          message={feedback.message}
+          type="success"
+          onClose={() => setFeedback(null)}
+        />
+      )}
     </div>
   )
 }

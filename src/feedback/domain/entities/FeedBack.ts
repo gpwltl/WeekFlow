@@ -1,14 +1,31 @@
-export class FeedbackMessage {
-  constructor(
-    public readonly taskName: string,
-    public readonly status: string,
-    public readonly message: string,
-  ) {}
+export interface FeedbackData {
+  taskId: string;
+  taskName: string;
+  status: 'in-progress' | 'completed';
+  message: string;
+  createdAt: Date;
+}
 
-  static create(taskName: string, status: string, message: string): FeedbackMessage {
-    if (!taskName || !status) {
-      throw new Error('작업 이름과 상태는 필수입니다.');
+export class Feedback {
+  taskId: string;
+  taskName: string;
+  status: 'in-progress' | 'completed';
+  message: string;
+  createdAt: Date;
+
+  private constructor(data: FeedbackData) {
+    this.taskId = data.taskId;
+    this.taskName = data.taskName;
+    this.status = data.status;
+    this.message = data.message;
+    this.createdAt = data.createdAt;
+  }
+
+  static create(data: FeedbackData): Feedback {
+    console.log("feedback API data: ", data);
+    if (!data.taskName || !data.status || !data.message) {
+      throw new Error('필수 필드가 누락되었습니다.');
     }
-    return new FeedbackMessage(taskName, status, message);
+    return new Feedback(data);
   }
 } 

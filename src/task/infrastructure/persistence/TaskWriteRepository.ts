@@ -58,7 +58,7 @@ export class TaskWriteRepository implements TaskWriter {
       .select()
       .from(tasks)
       .where(eq(tasks.id, id))
-      .then(rows => rows[0])
+      .then(rows => rows[0]);
 
     if (!existingTask) {
       throw new Error('Task not found');
@@ -67,7 +67,7 @@ export class TaskWriteRepository implements TaskWriter {
     // DB 상태값만 업데이트
     await db.update(tasks)
       .set({ status: newStatus })
-      .where(eq(tasks.id, id))
+      .where(eq(tasks.id, id));
 
     // 상태 변경 이벤트 생성 및 처리
     const statusEvent = new TaskStatusChangedEvent(
@@ -80,6 +80,31 @@ export class TaskWriteRepository implements TaskWriter {
 
     await this.eventStore.saveEvents([statusEvent]);
     await this.eventPublisher.publishEvents([statusEvent]);
+
+    // in-progress 또는 completed 상태일 때만 피드백 요청
+    if (newStatus === 'in-progress' || newStatus === 'completed') {
+      try {
+        const response = await fetch('/api/feedback', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            taskId: id,
+            taskName: existingTask.title,
+            status: newStatus,
+          }),
+        });
+
+        console.log(response);
+
+        if (!response.ok) {
+          console.error('Failed to generate feedback');
+        }
+      } catch (error) {
+        console.error('Error generating feedback:', error);
+      }
+    }
   }
 
   async delete(id: string): Promise<void> {

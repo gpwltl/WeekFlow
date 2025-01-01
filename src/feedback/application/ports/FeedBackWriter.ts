@@ -1,3 +1,5 @@
+import { Feedback, FeedbackData } from "../../domain/entities/FeedBack";
+
 export interface FeedbackWriter {
-  generateFeedback(taskName: string, status: string): Promise<string>;
+  create(data: FeedbackData): Promise<Feedback>;
 } 
