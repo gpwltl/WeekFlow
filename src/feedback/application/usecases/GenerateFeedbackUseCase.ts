@@ -1,5 +1,5 @@
-import { FeedbackMessage } from '../../domain/feedback.entity';
-import { OpenAIPort } from '../../domain/ports/openai.port';
+import { FeedbackMessage } from '../../domain/entities/FeedBack';
+import { OpenAIPort } from '../ports/FeedBackReader';
 
 export class GenerateFeedbackUseCase {
   constructor(private readonly openAIPort: OpenAIPort) {}

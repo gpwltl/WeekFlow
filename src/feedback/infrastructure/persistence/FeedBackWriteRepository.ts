@@ -1,7 +1,7 @@
-import { OpenAIPort } from '../../domain/ports/openai.port';
 import { OpenAI } from 'openai';
+import { FeedbackWriter } from '../../application/ports/FeedBackWriter';
 
-export class OpenAIService implements OpenAIPort {
+export class FeedBackWriteRepository implements FeedbackWriter {
   private openai: OpenAI;
     
   constructor(apiKey: string) {

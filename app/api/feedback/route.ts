@@ -1,4 +1,4 @@
-import { OpenAIService } from '@/src/feedback/infrastructure/openai/openai.service';
+import { OpenAIService } from '@/src/feedback/infrastructure/persistence/FeedBackWriteRepository';
 import { GenerateFeedbackUseCase } from '@/src/feedback/application/usecases/GenerateFeedbackUseCase';
 import { NextResponse } from 'next/server';
 
