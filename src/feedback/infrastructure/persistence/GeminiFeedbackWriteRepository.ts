@@ -1,17 +1,17 @@
-import { OpenAI } from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { FeedbackWriter } from '../../application/ports/FeedBackWriter';
 
-export class FeedBackWriteRepository implements FeedbackWriter {
-  private openai: OpenAI;
+export class GeminiFeedbackWriteRepository implements FeedbackWriter {
+  private genAI: GoogleGenerativeAI;
+  private model: any;
     
   constructor(apiKey: string) {
     if (!apiKey) {
-      throw new Error('OpenAI API 키가 필요합니다.');
+      throw new Error('Gemini API 키가 필요합니다.');
     }
     
-    this.openai = new OpenAI({
-      apiKey: apiKey,
-    });
+    this.genAI = new GoogleGenerativeAI(apiKey);
+    this.model = this.genAI.getGenerativeModel({ model: "gemini-pro" });
   }
 
   async generateFeedback(taskName: string, status: string): Promise<string> {
@@ -20,19 +20,15 @@ export class FeedBackWriteRepository implements FeedbackWriter {
     console.log(`피드백 생성 시작 - 작업: ${taskName}, 상태: ${status}`);
     
     try {
-      const completion = await this.openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: [{ role: "user", content: prompt }],
-        max_tokens: 100,
-        temperature: 0.7,
-      });
-
-      const generatedMessage = completion.choices[0].message?.content;
+      const result = await this.model.generateContent(prompt);
+      const response = await result.response;
+      const generatedMessage = response.text();
+      
       console.log('피드백 생성 완료:', generatedMessage);
       
       return generatedMessage || '피드백을 생성할 수 없습니다.';
     } catch (error) {
-      console.error('OpenAI API 호출 중 에러 발생:', error);
+      console.error('Gemini API 호출 중 에러 발생:', error);
       throw error;
     }
   }

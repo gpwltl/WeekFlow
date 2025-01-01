@@ -1,14 +1,14 @@
-import { OpenAIService } from '@/src/feedback/infrastructure/persistence/FeedBackWriteRepository';
 import { GenerateFeedbackUseCase } from '@/src/feedback/application/usecases/GenerateFeedbackUseCase';
+import { GeminiFeedbackWriteRepository } from '@/src/feedback/infrastructure/persistence/GeminiFeedbackWriteRepository';
 import { NextResponse } from 'next/server';
 
 // 팩토리 함수로 의존성 생성 관리
 function createUseCases() {
-    if (!process.env.OPENAI_API_KEY || !process.env.OPENAI_API_KEY.startsWith('sk-')) {
+    if (!process.env.OPENAI_API_KEY) {
         throw new Error('OPENAI_API_KEY is not set');
     }
 
-    const openAIService = new OpenAIService(process.env.OPENAI_API_KEY as string);
+    const openAIService = new GeminiFeedbackWriteRepository(process.env.OPENAI_API_KEY as string);
     return {
         generateFeedbackUseCase: new GenerateFeedbackUseCase(openAIService),
     };
